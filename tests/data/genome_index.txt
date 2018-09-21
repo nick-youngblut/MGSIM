@@ -1,0 +1,2 @@
+Methanosarcina_barkeri_MS	Methanosarcina_barkeri_MS.fna
+Methylobacterium_extorquens_AM1	Methylobacterium_extorquens_AM1.fna

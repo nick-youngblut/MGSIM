@@ -1,0 +1,2 @@
+Methanosarcina_barkeri_MS	NZ_CP009528.1
+Methylobacterium_extorquens_AM1	NC_012808.1
