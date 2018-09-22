@@ -9,8 +9,8 @@ Usage:
   genome_download --version
 
 Options:
-  <accessin_table>  Table of 'genome_name<tab>accession' entries.
-                    No header. ('-' if from STDIN)
+  <accessin_table>  Taxon-accession table (see Description).
+                    Use '-' if from STDIN.
   -d=<d>            Output directory. [Default: .]
   -e=<e>            Email to use for NCBI queries. [Default: blank@gmail.com]
   -n=<n>            Number of cpus. [Default: 1]
@@ -19,7 +19,12 @@ Options:
   --version         Show version.
 
 Description:
-
+  Taxon-accession table
+  ---------------------
+  * tab-delimited
+  * must contain 2 columns
+    * "Taxon" = taxon name
+    * "Accession" = NCBI accession used for downloading
 """
 
 # import

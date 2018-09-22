@@ -1,5 +1,5 @@
 """Class for simulating fragments from genomes"""
-
+from __future__ import print_function
 # import
 ## batteries
 import sys, os
@@ -13,11 +13,11 @@ from Bio import Entrez
 
 
 def main(args):
-    """Main entry point"""
-
+    """Main entry point
+    """
     # loading genome accession file
     acc_tbl = parse_acc_table(args['<accession_table>'])    
-
+    
     # creating put directory (if needed)
     if not os.path.isdir(args['-d']):
         os.makedirs(args['-d'])
@@ -26,13 +26,21 @@ def main(args):
     nprocs = int(args['-n'])
     pool = Pool(nprocs)
     func = partial(e_query, email=args['-e'], outdir=args['-d'])
-    if args['--debug']:
-        map(func, acc_tbl)
+    if args['--debug'] is True:
+        acc_tbl = list(map(func, acc_tbl))
     else:
-        pool.map(func, acc_tbl)
-            
+        acc_tbl = pool.map(func, acc_tbl)
+
+    # writing out new acc_tbl to STDOUT
+    print('\t'.join(['Taxon', 'Accession', 'Fasta']))
+    for x in acc_tbl:
+        print('\t'.join(x))
+        
 
 def e_query(x, email, outdir):
+    """Efetch query for one genome
+    x : [taxon, accession]
+    """
     genome_id,acc = x[:2]
 
     # querying 
@@ -58,29 +66,35 @@ def e_query(x, email, outdir):
         break
         
     # writing out file
-    outfile = os.path.join(outdir, genome_id + '.fna')
-    outF = open(outfile, 'w')
+    out_file = os.path.join(outdir, genome_id + '.fna')
+    outF = open(out_file, 'w')
     outF.write(''.join([x for x in records]) + '\n')
     outF.close()
     records.close()
 
     # status
     msg = 'File written: {}\n'
-    sys.stderr.write(msg.format(outfile))
-
+    sys.stderr.write(msg.format(out_file))
+    return [genome_id, acc, out_file]
     
 def parse_acc_table(infile):
     """Parsing tab-delim accession table (genome_name<tab>accession)
     """
+    # load file
     if infile == '-':
         inF = sys.stdin
     else:
         inF = open(infile)
+    df = pd.read_csv(inF, sep='\t')
+    ## check headers
+    diff = set(['Taxon','Accession']) - set(df.columns.values)
+    if len(diff) > 0:
+        diff = ','.join(diff)
+        raise ValueError('Cannot find table columns:{}'.format(diff))
 
+    # convert df to list of lists
     tbl = []
-    for line in inF:
-        line = line.rstrip().split('\t')
-        tbl.append(line)
-
+    for i,x in df.iterrows():
+        tbl.append([x['Taxon'], x['Accession']])
     return tbl
         

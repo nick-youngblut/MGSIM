@@ -6,7 +6,6 @@ import os
 import sys
 import pytest
 ## 3rd party
-import numpy as np
 import pandas as pd
 ## package
 from MGSIM import Utils
@@ -20,5 +19,5 @@ data_dir = os.path.join(test_dir, 'data')
 # tests
 def test_cmd():
     acc_tbl = os.path.join(data_dir, 'genome_download.txt')
-    args = ['-d', data_dir, acc_tbl]
+    args = ['-d', data_dir, acc_tbl, '--debug']
     Genome_download_CMD.opt_parse(args)

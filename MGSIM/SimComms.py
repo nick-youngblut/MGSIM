@@ -1,10 +1,13 @@
+from __future__ import print_function
 # import
 ## batteries
 import sys, os
 import numpy as np
 import pandas as pd
-import scipy.stats as stats
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ModuleNotFoundError:
+    from io import StringIO
 from random import randrange, sample, shuffle
 import re
 from functools import partial
@@ -12,6 +15,7 @@ from itertools import chain
 from operator import itemgetter
 from collections import OrderedDict
 ## 3rd party
+import scipy.stats as stats
 from configobj import ConfigObj, flatten_errors
 
 
@@ -45,11 +49,11 @@ def random_insert_seq(l, seq):
     -------
     list : target list with `seq` values randomly inserted
     """
-    insert_locs = sample(xrange(len(l) + len(seq)), len(seq))
+    insert_locs = sample(range(len(l) + len(seq)), len(seq))
     inserts = dict(zip(insert_locs, seq))
     inputs = iter(l)
     return [inserts[pos] if pos in inserts else next(inputs)
-              for pos in xrange(len(l) + len(seq))]
+              for pos in range(len(l) + len(seq))]
 
 
 def power_neg(*args, **kwargs):
@@ -58,8 +62,8 @@ def power_neg(*args, **kwargs):
     
     
 class _Comm(object):
-    """Parent class for other classes in the module."""
-    
+    """Parent class for other classes in the module.
+    """
     def __init__(self):
         pass
     
@@ -86,7 +90,8 @@ class _Comm(object):
 
 
 class SimComms(_Comm):
-    """Class for simulating taxon count data of communities."""
+    """Class for simulating taxon count data of communities.
+    """
     def __init__(self, taxon_list, perm_perc, shared_perc,
                  richness, abund_dist, abund_dist_params,
                  n_comm, config=None,
@@ -164,7 +169,7 @@ class SimComms(_Comm):
         n_config_comms = len(self.comm_params.keys())
         n_diff = self.n_comm - n_config_comms
         
-        for i in xrange(n_diff):
+        for i in range(n_diff):
             self.comm_params[str(n_config_comms + i + 1)] = dict()
         
         for k,v in self.comm_params.items():
@@ -196,16 +201,19 @@ class SimComms(_Comm):
         fileName : str
              name of taxon file
         """
-        self.taxon_pool = []
+        # load file
         if fileName == '-':
-            for l in sys.stdin:
-                x = l.rstrip().split('\t')
-                self.taxon_pool.append(x[0])
+            inF = sys.stdin
         else:
-            with open(fileName, 'r') as inF:
-                for l in inF.readlines():
-                    x = l.rstrip().split('\t')
-                    self.taxon_pool.append(x[0])
+            inF = open(fileName)
+        df = pd.read_csv(inF, sep='\t')
+        ## check headers
+        diff = set(['Taxon','Fasta']) - set(df.columns.values)
+        if len(diff) > 0:
+            diff = ','.join(diff)
+            raise ValueError('Cannot find table columns:{}'.format(diff))
+        
+        self.taxon_pool = df['Taxon']        # debug
         shuffle(self.taxon_pool)
 
         
@@ -240,7 +248,7 @@ class SimComms(_Comm):
                 rich.append(v['richness'])
             except KeyError:
                 msg = 'Cannot find "richness" attribute for Comm {}'
-                raise KeyError, msg.format(k)
+                raise KeyError(msg.format(k))
         n_unique = np.sum([x - self.n_shared for x in rich])
         n_taxa_pool = len(self.taxon_pool)
         n_comm = len(rich)
@@ -359,7 +367,6 @@ class SimComms(_Comm):
             comm.taxa.index = random_insert_seq([],
                                                 perm_ig(comm.taxa.index))
 
-        
     # dict functions
     def items(self):
         return self.comms.items()
@@ -367,10 +374,9 @@ class SimComms(_Comm):
         try:
             return self.comms.keys()
         except AttributeError:
-            return np.sort(self.comm_params.keys())
+            return np.sort(list(self.comm_params.keys()))
     def values(self):
         return self.comms.values()
-
         
     # property/setter
     @property
@@ -502,7 +508,7 @@ class Comm(_Comm):
             param_str = ','.join(param_str)
             msg = 'Params "{}" do not work with function "{}"'\
                   .format(param_str, dist)
-            raise TypeError, msg
+            raise TypeError(msg)
 
     @property
     def n_taxa(self):

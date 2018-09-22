@@ -104,7 +104,7 @@ def parseGenomeList(inFile, filePath=None, check_exists=True):
             row = line.rstrip().split('\t')
             
             if row[0] == '' or row[1] == '':
-                raise IOError, "Necessary row value is empty!"
+                raise IOError("Necessary row value is empty!")
 
             if len(row) < 2:
                 raise ValueError('Need format: "taxonName<tab>fileName";'

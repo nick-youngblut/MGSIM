@@ -9,9 +9,7 @@ from docopt import docopt
 #import Utils
 ## application
 from MGSIM.Commands import Communities
-from MGSIM.Commands import Fragments
 from MGSIM.Commands import Genome_download
-from MGSIM.Commands import Genome_index
 from MGSIM.Commands import Genome_rename
 
 
@@ -48,9 +46,7 @@ Description:
 
     # dict of all subcommands
     cmds = {'communities' : Communities,
-            'fragments' : Fragments,
             'genome_download' : Genome_download,
-            'genome_index' : Genome_index,
             'genome_rename' : Genome_rename}
     
     # list subcommands

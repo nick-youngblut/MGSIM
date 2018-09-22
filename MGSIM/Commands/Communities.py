@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-
 """
-communities: simulate communities in the samples used for SIP
+communities: simulate taxon abundances in synthetic communities
 
 Usage:
   communities [options] <genomeList>
@@ -9,7 +8,8 @@ Usage:
   communities --version
 
 Options:
-  <genomeList>        A file listing: taxon_name (see description).
+  <genomeList>        GenomeList table (see Description)
+                      Use '-' if from STDIN.
   --n_comm=<nc>       Number of communities to simulate.
                       [default: 1]
   --richness=<r>      The number of taxa in each library.
@@ -53,7 +53,6 @@ Description:
   ------
     A tab-delimited table of taxon abundances for each library is written to
     STDOUT.
-
 """
 
 # import
@@ -75,7 +74,7 @@ def main(uargs):
                   abund_dist_params = uargs['--abund_dist_p'],
                   n_comm = uargs['--n_comm'],
                   config = uargs['--config'])
-
+    
     # making communities
     for comm_id in SC.keys():        
         SC.make_comm(comm_id)

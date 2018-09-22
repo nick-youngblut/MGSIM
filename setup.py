@@ -11,11 +11,8 @@ install_reqs = [
     'numpy>=1.10',
     'pandas>=0.18',
     'scipy>=0.17',
-    'intervaltree>=2.1',
     'configobj>=5.0.6',
-    'biopython>=1.68',
-    'pyfasta>=0.5',
-    'MFEprimer_linux>=2.1.1'
+    'biopython>=1.68'
 ]
 
 ## install main application

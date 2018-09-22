@@ -19,6 +19,6 @@ data_dir = os.path.join(test_dir, 'data')
 
 # tests
 def test_main():
-    genomeList = os.path.join(data_dir, 'genome_index.txt')
+    genomeList = os.path.join(data_dir, 'genome_list.txt')
     args = [genomeList]
     Communities_CMD.opt_parse(args)
