@@ -20,5 +20,6 @@ data_dir = os.path.join(test_dir, 'data')
 # tests
 def test_main():
     genomeList = os.path.join(data_dir, 'genome_list.txt')
-    args = [genomeList]
+    output_prefix = os.path.join(data_dir, 'comm')
+    args = [genomeList, output_prefix, '--n-comm', 2]
     Communities_CMD.opt_parse(args)

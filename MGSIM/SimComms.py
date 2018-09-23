@@ -17,6 +17,7 @@ from collections import OrderedDict
 ## 3rd party
 import scipy.stats as stats
 from configobj import ConfigObj, flatten_errors
+from Bio import SeqIO
 
 
 # utility functions
@@ -212,10 +213,15 @@ class SimComms(_Comm):
         if len(diff) > 0:
             diff = ','.join(diff)
             raise ValueError('Cannot find table columns:{}'.format(diff))
-        
-        self.taxon_pool = df['Taxon']        # debug
+
+        # setting taxon_pool
+        self.taxon_pool = df['Taxon']
         shuffle(self.taxon_pool)
 
+        # setting genome fasta dict {Taxon : Fasta}
+        self.genome_fasta = {}
+        for i,x in df.iterrows():
+            self.genome_fasta[x['Taxon']] = x['Fasta']
         
     def _drawFromTaxonPool(self, n):
         """Draw from taxon pool, returning n-taxa;
@@ -267,7 +273,6 @@ class SimComms(_Comm):
             sys.stderr.write(msg.format(v['richness'], new_rich, k))
             v['richness'] = new_rich
         self._n_shared = None
-
                
     def make_comm(self, comm_id):
         """Make a Comm object.
@@ -290,14 +295,15 @@ class SimComms(_Comm):
         
         # init comm objects
         self.comms[comm_id] = Comm(comm_id, self)
-
         
-    def write_comm_table(self, Long=True):
+    def write_comm_table(self, out_file=None, Long=True):
         """Joining comm objects into 1 dataframe and printing.
         Writing table to STDOUT.
 
         Parameters
         ----------
+        out_file : str
+            Output file name
         Long : bool
             Write table in long format
         """
@@ -327,9 +333,42 @@ class SimComms(_Comm):
             df = df[['library','taxon_name','rel_abund_perc','rank']]
                         
         # writing dataframe
-        df.to_csv(sys.stdout, sep='\t', na_rep=0,
-                  float_format='%.9f', index=write_index)
-                
+        if out_file is None:
+            df.to_csv(sys.stdout, sep='\t', na_rep=0,
+                      float_format='%.9f', index=write_index)
+        else:
+            df.to_csv(out_file, sep='\t', na_rep=0,
+                      float_format='%.9f', index=write_index)            
+
+    def weighted_abundances(self):
+        """Calculate weighted abundance: rel_abund * genome_size
+        
+        Parameters
+        ----------
+        """
+        self._set_genome_sizes()
+
+        self.w_abund_tbl = {}
+        for comm_id,comm in self.items():
+            w_abunds = {}
+            for x in comm.taxa.index:
+                w_abunds[x] = comm.taxa[x] * self.genome_sizes[x]
+            sum_abunds = sum(w_abunds.values())
+            w_abunds = {k : v / sum_abunds * 100.0 for k,v in w_abunds.items()}
+            self.comms[comm_id].taxa = pd.Series(w_abunds)
+            
+    def _set_genome_sizes(self):
+        """Get the total bp for the genome sequence of all genomes
+        
+        Parameters
+        ----------
+        """
+        self.genome_sizes = {}
+        for taxon,fasta in self.genome_fasta.items():
+            self.genome_sizes[taxon] = 0
+            for record in SeqIO.parse(fasta, "fasta"):
+                self.genome_sizes[taxon] += len(record.seq)        
+        
     @staticmethod
     def permute(comm, perm_perc):
         """Permute a certain percentage of the taxa abundances.
@@ -377,8 +416,7 @@ class SimComms(_Comm):
             return np.sort(list(self.comm_params.keys()))
     def values(self):
         return self.comms.values()
-        
-    # property/setter
+    
     @property
     def n_comm(self):        
         return self._n_comm
@@ -443,27 +481,27 @@ class SimComms(_Comm):
             setattr(self, '_n_taxa_remaining', None)
         return len(self.taxon_pool)
                     
-
+    
 class Comm(_Comm):
     """Community class"""
 
-    def __init__(self, comm_id, GradientComms, *args, **kwargs): 
+    def __init__(self, comm_id, Comms, *args, **kwargs): 
         """
         Parameters
         ----------
         comm_id : str
             community ID
-        GradientComms : gradient community object
+        Comms : community object
         """
         _Comm.__init__(self, *args, **kwargs)
         self.comm_id = comm_id                                                     
-        self.params = GradientComms.comm_params[comm_id]
-        self.n_shared = GradientComms.n_shared
-        self.taxon_pool = GradientComms.taxon_pool
+        self.params = Comms.comm_params[comm_id]
+        self.n_shared = Comms.n_shared
+        self.taxon_pool = Comms.taxon_pool
         self.richness = self.params['richness']
 
         # assertions
-        if self.richness > self.n_shared + GradientComms.n_taxa_remaining:
+        if self.richness > self.n_shared + Comms.n_taxa_remaining:
             sys.exit('ERROR: Comm_ID {}\n'\
             '  Community richness is set too high! It is > taxon pool.\n'\
             '  There is not enough taxa to make the desired communities.\n' \
@@ -473,11 +511,11 @@ class Comm(_Comm):
         
         # selecting additional taxa beyond those shared by all comms
         ## unique taxa inserted rand in list while keeping shared taxa r-abund
-        n_unique = self.richness - GradientComms.n_shared
+        n_unique = self.richness - Comms.n_shared
         assert n_unique >= 0, 'ERROR: Comm_ID {}: the number ' \
             'of unique taxa is < 0'.format(comm_id)
-        self.taxa = random_insert_seq(GradientComms.shared_taxa,
-                                      GradientComms._drawFromTaxonPool(n_unique))
+        self.taxa = random_insert_seq(Comms.shared_taxa,
+                                      Comms._drawFromTaxonPool(n_unique))
 
         
         # drawing relative abundances from the user-defined distribution

@@ -43,50 +43,42 @@ import sys,os
 import re
 from functools import partial
 import multiprocessing as mp
+## 3rd party
+from Bio import SeqIO
 
 
 def seq_rename(inFile, prefix='.'):
     (inFileDir, inFileName) = os.path.split(inFile)
     inFileDir = os.path.abspath(inFileDir)
     prefix = os.path.abspath(prefix)
+    outFile = os.path.join(prefix, inFileName)
 
     if inFileDir == prefix:
         msg = 'ERROR: input and output directories are the same'
         sys.stderr.write(msg + '\n')
         return None
 
-    inFH = open(inFile, 'rb')             
-    outFile = os.path.join(prefix, inFileName)
-    outFH = open(outFile, 'wb')
-
     # regexes
-    re0 = re.compile(r'.+ complete genome. ')  # added for tutorial
+    re0 = re.compile(r'.+ complete genome. ')
     re1 = re.compile(r'\W')
     re2 = re.compile(r'^_*(.*?)_*$')
     re3 = re.compile(r'_*complete_genome')
     re4 = re.compile(r'(.{78}).+')
 
-    # iterating through file
-    seq_names = dict()
-    for line in inFH:
-        line = line.rstrip()
-        if line.startswith('>'):  # seq name
-            line = re0.sub('', line)
-            line = re1.sub('_', line)
-            line = re2.sub(r'>\1', line)
-            line = re3.sub('', line)
-            line = re4.sub(r'\1', line)
-            try:
-                _ = seq_names[line]
-                line = '_'.join(line, str(len(seq_names.keys())))
-            except KeyError:
-                pass
-            seq_names[line] = 1                
-        outFH.write(line + '\n')
-
-    # end
-    inFH.close()
-    outFH.close()
+    # iterating through sequence
+    with open(outFile, 'w') as outFH:
+        for i,record in enumerate(SeqIO.parse(inFile, 'fasta')):
+            name = record.name
+            name = re0.sub('', name)
+            name = re1.sub('_', name)
+            name = re2.sub(r'>\1', name)
+            name = re3.sub('', name)
+            name = re4.sub(r'\1', name)
+            name = name.lstrip('>') + '__seq{}'.format(i)
+            record.id = name
+            record.description = name
+            SeqIO.write(record, outFH, 'fasta')
+        
     msg = 'File written: {}\n'
     sys.stderr.write(msg.format(outFile))
 
@@ -100,7 +92,7 @@ def main(args):
     args['--prefix'] = os.path.abspath(args['--prefix'])
     if not os.path.isdir(args['--prefix']):
         os.makedirs(args['--prefix'])
-
+        
     # rename
     if args['--debug']:
         for f in args['<genome_fasta>']:

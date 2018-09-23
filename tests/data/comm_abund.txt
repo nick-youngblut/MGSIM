@@ -1,0 +1,7 @@
+library	taxon_name	rel_abund_perc	rank
+1	Methanosarcina_barkeri_MS	74.408456533	1
+1	Escherichia_coli_K-12_MG1655	19.151746484	2
+1	Clostridium_perfringens_ATCC_13124	6.439796984	3
+2	Methanosarcina_barkeri_MS	99.281507219	1
+2	Escherichia_coli_K-12_MG1655	0.704981683	2
+2	Clostridium_perfringens_ATCC_13124	0.013511098	3
