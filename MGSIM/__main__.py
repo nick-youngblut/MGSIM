@@ -11,7 +11,7 @@ from docopt import docopt
 from MGSIM.Commands import Communities
 from MGSIM.Commands import Genome_download
 from MGSIM.Commands import Genome_rename
-
+from MGSIM.Commands import Reads
 
 def main(args=None):
     """Main entry point for application
@@ -47,7 +47,8 @@ Description:
     # dict of all subcommands
     cmds = {'communities' : Communities,
             'genome_download' : Genome_download,
-            'genome_rename' : Genome_rename}
+            'genome_rename' : Genome_rename,
+            'reads' : Reads}
     
     # list subcommands
     if args['--list']:

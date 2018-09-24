@@ -127,8 +127,7 @@ class SimComms(_Comm):
 
         # shared taxa
         self._set_shared_taxa()
-                
-            
+                            
     def _get_configspec(self, strIO=True):
         """Return configspec set for instance.
         Parameters
@@ -154,14 +153,12 @@ class SimComms(_Comm):
             return StringIO(configspec)
         else:
             return configspec
-
-            
+ 
     def _load_config(self):    
         assert hasattr(self, 'config'), "No config attribute found."
 
         configspec = self._get_configspec()
         return ConfigObj(self.config, configspec=configspec)        
-
         
     def _set_comm_params(self):
         """Setting community-specific params including applying global params.
@@ -185,14 +182,12 @@ class SimComms(_Comm):
                 v['abund_dist_p'] is None):
                 v['abund_dist_p'] = self.abund_dist_params
             v['abund_dist_p'] = str2dict(v['abund_dist_p'])
-
                 
     def _set_shared_taxa(self):
         """A list of taxa shared among all communities.
         The taxon list (pool) is reduced to just unshared taxa.
         """
         self.shared_taxa = self._drawFromTaxonPool(self.n_shared)
-
         
     def _load_taxon_list(self, fileName):
         """Loading taxon list file. Taxa order is randomly shuffled.
@@ -331,6 +326,11 @@ class SimComms(_Comm):
             df['rank'] = df.groupby(['library'])['rel_abund_perc']\
                            .rank(method='first',ascending=False).astype('int')
             df = df[['library','taxon_name','rel_abund_perc','rank']]
+            # renaming
+            df.rename(columns={'library' : 'Community',
+                       'taxon_name' : 'Taxon',
+                       'rel_abund_perc' : 'Perc_rel_abund',
+                       'rank' : 'Rank'}, inplace=True)
                         
         # writing dataframe
         if out_file is None:
