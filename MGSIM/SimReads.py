@@ -19,11 +19,17 @@ from MGSIM import Utils
 
 
 def tidy_taxon_names(x):
+    """Remove special characters from taxon names
+    """
     x = re.sub(r'[()\/:;, ]+', '_', x)
     return x
 
 def load_genome_table(in_file):
     """Loading genome table
+    Parameters
+    ----------
+    in_file : str
+        input file path
     """
     df = pd.read_csv(in_file, sep='\t')
     
@@ -46,6 +52,8 @@ def _genome_size(x):
         
     Parameters
     ----------
+    x : pd.Series
+       Series that includes 'Fasta' in the index
     """
     bp = 0
     for record in SeqIO.parse(x['Fasta'], 'fasta'):
@@ -54,6 +62,10 @@ def _genome_size(x):
 
 def load_abund_table(in_file):
     """Loading abundance table
+    Parameters
+    ----------
+    in_file : str
+        input file path
     """
     df = pd.read_csv(in_file, sep='\t')
     
@@ -70,6 +82,10 @@ def load_abund_table(in_file):
 
 def sample_taxon_list(genome_table, abund_table):
     """Creating [sample,taxon] list of lists
+    Parameters
+    ----------
+    genome_table : pd.DataFrame
+    abund_table : pd.DataFrame
     """
     # joining tables
     df = abund_table.merge(genome_table, on=['Taxon'])
@@ -85,8 +101,20 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
     """Simulate illumina reads
     Parameters
     ----------
-    x : list
+    sample_taxon : list
         [Community,Taxon,Genome_size,Fasta,Perc_rel_abund,Fold]
+    output_dir : str
+        Output director for all read files
+    seq_depth : int
+        Sequencing depth per sample
+    art_params : dict
+        Parameters provided to art_illumina
+    temp_dir : str
+        Temporary file directory
+    nproc : int
+        Number of parallel processes
+    debug : bool
+        Debug mode
     """
     # check that simulator exists
     exe = 'art_illumina'
@@ -138,7 +166,6 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
                    temp_dir=temp_dir,
                    file_prefix='illumina',
                    output_dir=output_dir,
-                   nproc=nproc,
                    debug=debug)
     if debug is True:
         res = map(func, comms)
@@ -198,7 +225,21 @@ def sim_art(x, art_params, temp_dir, debug=False):
     
     return res
    
-def combine_reads_by_sample(sample, temp_dir, file_prefix, output_dir, nproc=1, debug=False):
+def combine_reads_by_sample(sample, temp_dir, file_prefix, output_dir, debug=False):
+    """ Concat all sample-taxon read files into per-sample read files
+    Parameters
+    ----------
+    sample : str
+        Sample ID
+    temp_dir : str
+        Temporary directory path
+    file_prefix : str
+        Output file prefix
+    output_dir : str
+        Output directory path
+    debug : bool
+        Debug mode
+    """
     # find files
     ## read1
     p = os.path.join(temp_dir, str(sample), '*', file_prefix + '1.fq')
@@ -225,9 +266,15 @@ def combine_reads_by_sample(sample, temp_dir, file_prefix, output_dir, nproc=1, 
     return [R1_files, R2_files]
         
 def _combine_reads(read_files, output_dir, output_file):
-    """
+    """Combine fastq read files into 1 read file
     Parameters
     ----------
+    read_files : list
+        All read files to combine
+    output_dir : str
+        Output directory path
+    output_file : str
+        Output file path
     """
     output_file = os.path.join(output_dir, output_file)
     with open(output_file, 'w') as outFH:

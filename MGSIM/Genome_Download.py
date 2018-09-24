@@ -2,7 +2,9 @@
 from __future__ import print_function
 # import
 ## batteries
-import sys, os
+import os
+import sys
+import re
 import time
 from functools import partial
 ## 3rd party
