@@ -30,7 +30,7 @@ Metagenome read simulation for multiple synthetic communities
 * conda-forge::pandas
 * conda-forge::docopt
 * conda-forge::scipy
-* bioconda::biopython
+* conda-forge::biopython
 * bioconda::art
 
 ## Install
