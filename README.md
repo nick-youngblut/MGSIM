@@ -40,6 +40,14 @@ Metagenome read simulation for multiple synthetic communities
 > In theory, dependencies are NOT found in your conda
 environment will be downloaded during the `setup.py install`
 
+## Testing
+
+* conda-forge::pytest
+
+In the MGSIM base directory, use the command `pytest` to
+run all of the tests.
+
+
 # HOW-TO
 
 ## Download genomes
