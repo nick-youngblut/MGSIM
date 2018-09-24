@@ -318,10 +318,11 @@ class SimComms(_Comm):
             # sorting 
             df = df.sort_values(by=['library','rel_abund_perc'], 
                                 ascending=[1,0])
-
             # converting any NAs to zeros
             df.fillna(0, inplace=True)
-
+            # tidy taxon names
+            func = lambda x: re.sub(r'[()\/:;, ]+', '_', x)
+            df['taxon_name'] = df['taxon_name'].apply(func)
             # getting rank by community (grouping by community)
             df['rank'] = df.groupby(['library'])['rel_abund_perc']\
                            .rank(method='first',ascending=False).astype('int')

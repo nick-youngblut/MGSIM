@@ -30,6 +30,7 @@ Description:
   Output
   ------
   * Genome fasta files written to the specified output directory
+  * A table mapping taxa to the download genome fasta file is written to STDOUT
 """
 
 # import
