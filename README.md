@@ -25,10 +25,20 @@ Metagenome read simulation for multiple synthetic communities
 
 ## Dependencies
 
+* python 3 (or 2.7)
 * conda-forge::numpy
 * conda-forge::pandas
+* conda-forge::docopt
+* conda-forge::biopython
 * bioconda::biopython
 * bioconda::art
+
+## Install
+
+`python setpy.py install`
+
+> In theory, dependencies are NOT found in your conda
+environment will be downloaded during the `setup.py install`
 
 # HOW-TO
 
@@ -43,8 +53,6 @@ Metagenome read simulation for multiple synthetic communities
 ## Simulate reads for each genome in each community
 
 `MGSIM reads -h`
-
-* 
 
 
 # CHANGELOG
