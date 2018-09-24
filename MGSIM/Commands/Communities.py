@@ -3,12 +3,12 @@
 communities: simulate taxon abundances in synthetic communities
 
 Usage:
-  communities [options] <genomeList> <prefix>
+  communities [options] <genome_table> <prefix>
   communities -h | --help
   communities --version
 
 Options:
-  <genomeList>        GenomeList table (see Description)
+  <genome_table>      Genome table (see Description)
                       Use '-' if from STDIN.
   <prefix>            Output file prefix
   --n-comm=<nc>       Number of communities to simulate.
@@ -43,17 +43,25 @@ Options:
   -h --help           Show this screen.
 
 Description:
-  Simulating the alpha and and beta diversities of >=1 community.
+  Simulating taxon abundances (& the relative contribution to the DNA pool)
+  for each synthetic community. 
 
-  genomeList
-  ----------
-    A text file listing one taxon name per line. 
-    Anything after a <tab> will be ignored. 
+  Community alpha- and beta-diveristy can be manipulated.
+
+  genome_table
+  ------------
+  * tab-delimited
+  * must contain 2 columns
+    * "Taxon" = taxon name
+    * "Fasta" = genome fasta file path
+  * other columns are allowed
 
   Output
   ------
-    A tab-delimited table of taxon abundances for each library is written to
-    STDOUT.
+  * "PREFIX_abund.txt" = taxon relative abundances for each community
+    * this is the relative number of genome copies for each taxon
+  * "PREFIX_wAbund.txt" = taxon relative abundances weighted by genome size
+    * this is the fraction of the DNA pool for each taxon
 """
 
 # import
@@ -67,7 +75,7 @@ from MGSIM.SimComms import SimComms
 # functions
 def main(uargs):
     # init    
-    SC = SimComms(taxon_list = uargs['<genomeList>'],
+    SC = SimComms(taxon_list = uargs['<genome_table>'],
                   perm_perc = uargs['--perm-perc'],
                   shared_perc = uargs['--shared-perc'],
                   richness = uargs['--richness'],

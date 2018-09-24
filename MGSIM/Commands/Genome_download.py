@@ -25,6 +25,11 @@ Description:
   * must contain 2 columns
     * "Taxon" = taxon name
     * "Accession" = NCBI accession used for downloading
+  * other columns are allowed
+
+  Output
+  ------
+  * Genome fasta files written to the specified output directory
 """
 
 # import

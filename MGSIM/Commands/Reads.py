@@ -33,7 +33,29 @@ Options:
   --version           Show version.
 
 Description:
+  Simulating reads for each taxon in each synthetic community
 
+  abund_table
+  -----------
+  * tab-delimited
+  * must contain 3 columns
+    * "Community" = community ID (ie., sample ID)
+    * "Taxon" = taxon name
+    * "Perc_rel_abund" = percent relative abundance of the taxon
+
+  genome_table
+  ------------
+  * tab-delimited
+  * must contain 2 columns
+    * "Taxon" = taxon name
+    * "Fasta" = genome fasta file path
+  * other columns are allowed
+
+  Output
+  ------
+  * A set of read files for each sample
+    * directory structure: OUTPUT_DIR/COMMUNITY/read_files
+    * read sequences are named by the taxon they originate from
 """
 
 # import

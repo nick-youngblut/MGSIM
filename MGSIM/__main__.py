@@ -47,7 +47,7 @@ Description:
     # dict of all subcommands
     cmds = {'communities' : Communities,
             'genome_download' : Genome_download,
-            'genome_rename' : Genome_rename,
+#            'genome_rename' : Genome_rename,
             'reads' : Reads}
     
     # list subcommands
