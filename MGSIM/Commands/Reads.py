@@ -4,22 +4,31 @@
 reads: simulating reads
 
 Usage:
-  reads [options] <genome_table> <abund_table>
+  reads [options] <genome_table> <abund_table> <output_dir>
   reads -h | --help
   reads --version
 
 Options:
   <abund_table>       Taxon abundance info.  
   <genome_table>      Taxon genome info.
+  <output_dir>        Output directory.
   --sr-seq-depth=<d>  Number of (paired) Illumina reads per sample.
-                      [Default: 1e6]
-  --art-params=<ap>   art parameters
-                      [Default: '-ss HS25 -p -l 150 -m 200 -s 10']
+                      [Default: 1e5]
+  --art-paired        art_iilumina --paired parameter.
+  --art-len=<al>      art_illumina --len parameter.
+                      [Default: 150] 
+  --art-mflen=<am>    art_illumina --mflen parameter.
+                      Use 0 to turn off
+                      [Default: 200]
+  --art-sdev=<ad>     art_illumina --sdev parameter.
+                      [Default: 10]
+  --art-seqSys=<as>   art_iilumina --seqSys paramete.r
+                      [Default: HS25]
   --tmp-dir=<td>      Temporary directory
-                      [Default: '.sim_reads']
+                      [Default: .sim_reads]
   -n=<n>              Number of cpus. 
                       [Default: 1]
-  --debug             Debug mode (no multiprocessing).
+  --debug             Debug mode (no subprocesses; verbose output)
   -h --help           Show this screen.
   --version           Show version.
 
@@ -38,14 +47,6 @@ import multiprocessing as mp
 from MGSIM import SimReads
 
 def main(args):
-    # load genome_table
-    # load genome_abundance info
-    # create pairwise [sample,taxon,genome_fasta] list of lists
-    # (parallel) call art_illumina
-    ## convert abund to genome fold
-    ### fold = abund * seq_depth / genome_length
-    ## art_illumina -ss HS25 -p -l 150 -f 30 -m 200 -s 10 -f {fold} -i {input} -o {params.out_prefix}
-
     # load tables
     genome_table = SimReads.load_genome_table(args['<genome_table>'])
     abund_table = SimReads.load_abund_table(args['<abund_table>'])
@@ -53,9 +54,23 @@ def main(args):
     sample_taxon = SimReads.sample_taxon_list(genome_table,
                                               abund_table)
     # simulating reads
+    ## art params
+    art_params = {'--paired' : args['--art-paired'],
+                  '--len' : int(args['--art-len']),
+                  '--mflen' : float(args['--art-mflen']),
+                  '--sdev' : float(args['--art-sdev']),
+                  '--seqSys' : args['--art-seqSys']}
+    if art_params['--paired'] is True:
+        art_params['--paired'] = ''
+    else:
+        art_params.pop('--paired', None)
+    if int(art_params['--mflen']) <= 0:
+        art_params.pop('--mflen', None)
+    ## read simulate
     SimReads.sim_illumina(sample_taxon,
+                          output_dir=args['<output_dir>'],
                           seq_depth=float(args['--sr-seq-depth']),
-                          art_params=args['--art-params'],
+                          art_params=art_params,
                           temp_dir=args['--tmp-dir'],
                           nproc=int(args['-n']),
                           debug=args['--debug'])

@@ -16,10 +16,14 @@ tests/data/*.2bit
 tests/data/*.uni
 tests/data/*.png
 tests/data/*.log
+tests/data/temp_read_files/
+tests/data/TEST*
 tests/data/renamed/
+tmp/
 *_OLD/
 *_OLD
 *.egg-info/
 *.eggs/
 .pytest_*
 __pycache__
+
