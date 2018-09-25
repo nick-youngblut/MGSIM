@@ -37,7 +37,7 @@ def main(args):
     print('\t'.join(['Taxon', 'Accession', 'Fasta']))
     for x in acc_tbl:
         # tidy taxon names
-        x[0] = re.sub(r'[()\/:;, ]+', '_', x[0])
+        x[0] = re.sub(r'[()\/:;, ]+', '_', str(x[0]))
         # writing line
         print('\t'.join(x))
         

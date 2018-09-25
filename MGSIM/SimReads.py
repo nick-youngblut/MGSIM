@@ -43,7 +43,7 @@ def load_genome_table(in_file):
     df['Genome_size'] = [_genome_size(x) for i,x in df.iterrows()]
 
     # tidy taxon names
-    df['Taxon'] = df['Taxon'].apply(tidy_taxon_names)
+    df['Taxon'] = df['Taxon'].astype(str).apply(tidy_taxon_names)
     
     return df
 
@@ -76,7 +76,7 @@ def load_abund_table(in_file):
         raise ValueError('Cannot find table columns: {}'.format(diff))
 
     # tidy taxon names
-    df['Taxon'] = df['Taxon'].apply(tidy_taxon_names)
+    df['Taxon'] = df['Taxon'].astype(str).apply(tidy_taxon_names)
 
     return df
 
