@@ -25,7 +25,7 @@ def main(args):
         os.makedirs(args['-d'])
     
     # query via efetch & download
-    nprocs = int(args['-n'])
+    nprocs = int(float(args['-n']))
     pool = Pool(nprocs)
     func = partial(e_query, email=args['-e'], outdir=args['-d'])
     if args['--debug'] is True:

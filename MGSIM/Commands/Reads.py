@@ -94,7 +94,7 @@ def main(args):
                           seq_depth=float(args['--sr-seq-depth']),
                           art_params=art_params,
                           temp_dir=args['--tmp-dir'],
-                          nproc=int(args['-n']),
+                          nproc=int(float(args['-n'])),
                           debug=args['--debug'])
     
 def opt_parse(args=None):
