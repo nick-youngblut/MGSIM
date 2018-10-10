@@ -206,7 +206,7 @@ def sim_art(x, art_params, temp_dir, debug=False):
     
     # art command
     art_params = ' '.join(['{} {}'.format(k,v) for k,v in art_params.items()])
-    cmd = 'art_illumina {art_params} -f {fold} -i {input} -o {output_prefix}'
+    cmd = 'art_illumina {art_params} --noALN -f {fold} -i {input} -o {output_prefix}'
     cmd = cmd.format(art_params=art_params,
                      fold=fold,
                      input=fasta,
