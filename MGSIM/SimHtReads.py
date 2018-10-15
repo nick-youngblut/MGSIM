@@ -41,15 +41,27 @@ def bin_barcodes(barcodes, binsize=1000):
     return [barcodes[bins == x] for x in np.unique(bins)]
 
 def sim_barcode_reads(barcodes, genome_table, abund_table, args):
-    """Simulate reads for each fragment barcode
+    """Simulate reads for each fragment associated with each barcode
+    Parameters
+    ----------
+    barcodes : iterable
+        Iterable of barcodes [str]
+    genome_table : pd.dataframe
+        Table that maps genome fasta to each taxon
+    abund_table : pd.dataframe
+        Table listing relative abundances of each taxon
+    args: dict
+        Command line args 
     """
     genome_table = genome_table.merge(abund_table,on=['Taxon'])
 
     # simulate fragment reads
     for barcode in barcodes:
         # number of fragments
-        n_frags = 5    # TODO: sample from distribution
-            
+        n_frags = np.random.normal(loc=float(args['--frag-bc-mean']),
+                                   scale=float(args['--frag-bc-sd']))
+        n_frags = int(round(n_frags, 0))
+        
         # selecting reference genomes (with replacement)
         refs = select_refs(n_frags, genome_table)
 
@@ -62,7 +74,6 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, args):
 
         # parsing fragments
         func = partial(parse_frags, barcode=barcode, out_dir=args['--tmp-dir'])
-        #refs.groupby(['Taxon']).apply(func)
         frag_files = [func(refs.loc[refs['Taxon'] == taxon]) for taxon in refs['Taxon'].unique()]
         # simulating reads
         for F in frag_files:
@@ -71,36 +82,33 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, args):
                           '--mflen' : args['--art-mflen'],
                           '--sdev' : args['--art-sdev'],
                           '--seqSys' : args['--art-seqSys']}
-            sim_illumina(F, str(barcode),
-                         seq_depth=float(args['--seq-depth']),
-                         total_barcodes=int(float(args['--barcode-total'])),
-                         art_params=art_params, debug=args['--debug'])
-    return len(barcodes)
+            fq_files = sim_illumina(F, str(barcode),
+                                    seq_depth=float(args['--seq-depth']),
+                                    total_barcodes=int(float(args['--barcode-total'])),
+                                    art_params=art_params, debug=args['--debug'])
+    return fq_files
     
 def sim_illumina(frag_fasta, barcode, seq_depth, total_barcodes, art_params, debug=False):
-    """Simulating illumina reads for each genome fragment
+    """Simulating illumina reads for each fragment from each barcode
+    Parameters
+    ----------
+    frag_fasta : str
+        Fasta file of simulated gDNA fragments for a particular barcode
+    barcode : str
+        Barcode ID
+    seq_depth : int
+        Total sequencing depth
+    total_barcodes : int
+        Total number of barcodes
+    art_params : dict
+        art_illumina parameters
+    debug : bool
+        debug mode 
     """
     output_prefix = os.path.splitext(frag_fasta)[0] + '_'
 
-    # fold coverage
-    ## total length of fragments
-    f = Fasta(frag_fasta)
-    total_frag_len = sum([len(f[x]) for x in f.keys()])
-    ## length of reads
-    try:
-        read_len = int(float(art_params['--len']))
-    except KeyError:
-        raise KeyError('Cannot find --len param for art_illumina')
-    try:
-        _ = art_params['--paired']
-        is_paired = True
-    except KeyError:
-        is_paired = False
-    read_len = read_len * 2 if is_paired else read_len
-    ## fold calc
-    seqs_per_barcode = seq_depth / total_barcodes
-    fold  = seqs_per_barcode * read_len / total_frag_len
-    #print([seq_depth, total_barcodes, read_len, total_frag_len])
+    # calculate fold coverage to simulate
+    fold = calc_fold(frag_fasta, seq_depth, total_barcodes, art_params)
     
     # art_illumina command
     art_params = ' '.join(['{} {}'.format(k,v) for k,v in art_params.items()])
@@ -121,41 +129,70 @@ def sim_illumina(frag_fasta, barcode, seq_depth, total_barcodes, art_params, deb
     res = res.stdout.decode()
     if debug is True:
         sys.stderr.write(res + '\n')
-    # ret
-    return res
 
-def combine_reads(temp_dir, file_prefix, output_dir, n_barcodes, debug=False):
+    # check that files have been created
+    R0_file = output_prefix + '.fq'
+    R1_file = output_prefix + '1.fq'
+    R2_file = output_prefix + '2.fq'
+    if os.path.isfile(R1_file) and os.path.isfile(R2_file):
+        return [R1_file, R2_file]
+    elif os.path.isfile(R0_file):
+        return [R0_file]
+    else:
+        msg = 'Cannot find art_illumina output files!'
+        raise ValueError(msg)
+
+def calc_fold(frag_fasta, seq_depth, total_barcodes, art_params):
+    """Calculate fold coverage to simulate per barcode
+    Parameters
+    ----------
+    frag_fasta : str
+        Fasta file of simulated gDNA fragments for a particular barcode
+    seq_depth : int
+        Total sequencing depth
+    total_barcodes : int
+        Total number of barcodes
+    art_params : dict
+        art_illumina parameters
+    """
+    # fold coverage
+    ## total length of fragments
+    f = Fasta(frag_fasta)
+    total_frag_len = sum([len(f[x]) for x in f.keys()])
+    ## length of reads
+    try:
+        read_len = int(float(art_params['--len']))
+    except KeyError:
+        raise KeyError('Cannot find --len param for art_illumina')
+    try:
+        _ = art_params['--paired']
+        is_paired = True
+    except KeyError:
+        is_paired = False
+    read_len = read_len * 2 if is_paired else read_len
+    ## fold calc
+    seqs_per_barcode = seq_depth / total_barcodes
+    fold  = seqs_per_barcode * read_len / total_frag_len
+    
+    return fold
+
+def combine_reads(fq_files, output_dir, debug=False):
     """ Concat all reads
     Parameters
     ----------
-    temp_dir : str
-        Temporary directory path
-    file_prefix : str
-        Output file prefix
+    fq_files : iterable
+        Iterable of fastq read files
     output_dir : str
-        Output directory path
+        Final output directory for read files
     debug : bool
         Debug mode
     """
-    # find files
-    ## read1
-    p = os.path.join(temp_dir, '*_1.fq')
-    R1_files = glob(p)
-    if len(R1_files) == 0:
-        p = os.path.join(temp_dir, '*.fq')
-        R1_files = glob(p)
+    # split by read pairs
+    R1_files = [x[0] for x in fq_files]
+    try:
+        R2_files = [x[1] for x in fq_files]
+    except IndexError:
         R2_files = None
-    else:
-        ## read2
-        p = os.path.join(temp_dir, '*_2.fq')
-        R2_files = glob(p)
-
-    # assertions
-    msg = 'No. of R1 files: {} != No. of barcodes: {}'
-    assert len(R1_files) == n_barcodes, msg.format(len(R1_files), n_barcodes)
-    if R2_files is not None:
-        msg = 'No. of R2 files: {} != No. of barcodes: {}'
-        assert len(R2_files) == n_barcodes, msg.format(len(R2_files), n_barcodes)
         
     # writing files
     if not os.path.isdir(output_dir):
@@ -167,6 +204,8 @@ def combine_reads(temp_dir, file_prefix, output_dir, n_barcodes, debug=False):
         R2_files = _combine_reads(R2_files, output_dir, 'R2.fq')
 
 def _combine_reads(read_files, out_dir, out_file):
+    """Combining temporary read files
+    """
     out_file = os.path.join(out_dir, out_file)
     cmd = 'cat {} > {}'.format(' '.join(read_files), out_file)
     res = subprocess.run(cmd, check=True, shell=True, stdout=subprocess.PIPE)
@@ -175,6 +214,7 @@ def _combine_reads(read_files, out_dir, out_file):
         
 def select_refs(n_frags, genome_table):
     """Selecting genomes (with replacement)
+    -- Columns in genome_table --
     "Fasta" = genome file
     "Taxon" = taxon to select
     "Perc_rel_abund" = weight
@@ -186,10 +226,23 @@ def select_refs(n_frags, genome_table):
                             p=probs)
     return genome_table.loc[refs]
     
-def sim_frags(refs, n_frags,
-              frag_size_loc, frag_size_scale,
+def sim_frags(refs, n_frags, frag_size_loc, frag_size_scale,
               frag_size_min, frag_size_max):
     """Simulating fragment sizes
+    Parameters
+    ----------
+    refs : pd.dataframe
+        Dataframe of reference taxa
+    n_frags : int
+        Number of fragments
+    frag_size_loc : float
+        Mean fragment size
+    frag_size_scale : float
+        Stdev fragment size
+    frag_size_min : float
+        Min fragmen size (trun-norm distribution)
+    frag_size_max : float
+        Max fragmen size (trun-norm distribution)
     """
     a = (frag_size_min - frag_size_loc) / frag_size_scale  # fraction of range smaller than loc
     b = (frag_size_max - frag_size_loc) / frag_size_scale  # fraction of range greater than loc
@@ -201,6 +254,14 @@ def sim_frags(refs, n_frags,
     
 def parse_frags(refs, barcode, out_dir):
     """Parsing fragment from a genome and writing them to a file
+    Parameters
+    ----------
+    refs : pd.dataframe
+        Dataframe of reference taxa
+    barcode : str
+        Barcode ID
+    out_dir : str
+        Output directory
     """
     regex = re.compile(r'[ ;:,(){]')
     # fasta file of genome
@@ -236,19 +297,12 @@ def parse_frags(refs, barcode, out_dir):
                     seqID = re.sub(regex, '_', seqID)
                     outF.write('>{}\n{}\n'.format(seqID, f[contig_id][frag_start:frag_end]))
                     contigs.append(contig_id)
-                    #frag_starts.append(frag_start)
-                    #frag_ends.append(frag_end)
                     break
     # assert that frag was created
     if len(contigs) < refs.shape[0]:
         msg = 'For taxon "{}", cannot find contig with length >= fragment size ({})'
         raise ValueError(taxon, msg.format(frag_size))
     
-    #refs.loc[:,'Frag_contig'] = contigs
-    #refs.loc[:,'Frag_start'] = frag_starts
-    #refs.loc[:,'Frag_end'] = frag_ends
-    #refs.loc[:,'Frag_outfile'] = out_file * refs.shape[0]
-
     return out_file
 
 

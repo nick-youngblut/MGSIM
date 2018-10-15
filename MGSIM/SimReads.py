@@ -153,16 +153,17 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
                    temp_dir=temp_dir,
                    debug=debug)
     if debug is True:
-        res = map(func, sample_taxon)
+        fq_files = map(func, sample_taxon)
     else:
         p = Pool(nproc)
-        res = p.map(func, sample_taxon)
-    res = list(res)
+        fq_files = p.map(func, sample_taxon)
+    fq_files = list(fq_files)
 
     # combining all reads by sample
     sys.stderr.write('Combining simulated reads by sample...\n')    
     comms = list(set([x[0] for x in sample_taxon]))
     func = partial(combine_reads_by_sample,
+                   fq_files=fq_files,
                    temp_dir=temp_dir,
                    file_prefix='illumina',
                    output_dir=output_dir,
@@ -190,11 +191,11 @@ def sim_art(x, art_params, temp_dir, debug=False):
     x : list
         [Community,Taxon,Genome_size,Fasta,Perc_rel_abund,Fold]
     """
-    community = x[0]
-    taxon = x[1]
-    fasta = x[3]
-    perc_rel_abund = x[4]
-    fold = x[5]
+    community = str(x[0])
+    taxon = str(x[1])
+    fasta = str(x[3])
+    perc_rel_abund = float(x[4])
+    fold = float(x[5])
     
     # output
     ## temporary directories
@@ -222,10 +223,20 @@ def sim_art(x, art_params, temp_dir, debug=False):
     res = res.stdout.decode()
     if debug is True:
         sys.stderr.write(res + '\n')
-    
-    return res
+
+    # check that files have been created
+    R0_file = output_prefix + '.fq'
+    R1_file = output_prefix + '1.fq'
+    R2_file = output_prefix + '2.fq'
+    if os.path.isfile(R1_file) and os.path.isfile(R2_file):
+        return [community, R1_file, R2_file]
+    elif os.path.isfile(R0_file):
+        return [community, R0_file]
+    else:
+        msg = 'Cannot find art_illumina output files!'
+        raise ValueError(msg)
    
-def combine_reads_by_sample(sample, temp_dir, file_prefix, output_dir, debug=False):
+def combine_reads_by_sample(sample, fq_files, temp_dir, file_prefix, output_dir, debug=False):
     """ Concat all sample-taxon read files into per-sample read files
     Parameters
     ----------
@@ -240,18 +251,13 @@ def combine_reads_by_sample(sample, temp_dir, file_prefix, output_dir, debug=Fal
     debug : bool
         Debug mode
     """
-    # find files
-    ## read1
-    p = os.path.join(temp_dir, str(sample), '*', file_prefix + '1.fq')
-    R1_files = glob(p)
-    if len(R1_files) == 0:
-        p = os.path.join(temp_dir, str(sample), '*', file_prefix + '.fq')
-        R1_files = glob(p)
+    # sorting fastq files by read pair
+    sample = str(sample)
+    R1_files = [x[1] for x in fq_files if x[0] == sample]
+    try:
+        R2_files = [x[2] for x in fq_files if x[0] == sample]
+    except IndexError:
         R2_files = None
-    else:
-        ## read2
-        p = os.path.join(temp_dir, str(sample), '*', file_prefix + '2.fq')
-        R2_files = glob(p)
 
     # writing files
     output_dir = os.path.join(output_dir, str(sample))
@@ -286,5 +292,7 @@ def _combine_reads(read_files, output_dir, output_file):
                 record.id = name
                 record.description = name
                 SeqIO.write(record, outFH, 'fastq')
+            # delete temporary file
+            os.remove(in_file)
 
     return output_file
