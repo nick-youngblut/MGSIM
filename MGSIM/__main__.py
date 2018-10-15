@@ -47,8 +47,8 @@ Description:
     # dict of all subcommands
     cmds = {'communities' : Communities,
             'genome_download' : Genome_download,
-#            'genome_rename' : Genome_rename,
-            'reads' : Reads}
+            'reads' : Reads,
+            'ht_reads' : HtReads}
     
     # list subcommands
     if args['--list']:

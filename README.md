@@ -2,16 +2,6 @@ MGSIM
 =====
 
 Metagenome read simulation for multiple synthetic communities
- 
-# Notes on Frank-seq read simulation
-
-## `art_illumina`
-
-* `--id` => set the read prefix (use for barcode?)
-* `--len` => how long after removing barcodes?
-* `--out` => barcode
-* 
-
 
 #### Sections
 
