@@ -5,8 +5,10 @@ import os
 import sys
 import re
 import time
+import uuid
 import subprocess
 from glob import glob
+from pprint import pprint
 from shutil import rmtree
 from random import shuffle
 from functools import partial
@@ -56,6 +58,8 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, args):
     genome_table = genome_table.merge(abund_table,on=['Taxon'])
 
     # simulate fragment reads
+    frag_tsv_files = []
+    read_fq_files = []
     for barcode in barcodes:
         # number of fragments
         n_frags = np.random.normal(loc=float(args['--frag-bc-mean']),
@@ -75,19 +79,34 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, args):
         # parsing fragments
         func = partial(parse_frags, barcode=barcode, out_dir=args['--tmp-dir'])
         frag_files = [func(refs.loc[refs['Taxon'] == taxon]) for taxon in refs['Taxon'].unique()]
+        
         # simulating reads
-        for F in frag_files:
+        for (fasta_file,tsv_file) in frag_files:
             art_params = {'--paired' : args['--art-paired'],
                           '--len' : args['--art-len'],
                           '--mflen' : args['--art-mflen'],
                           '--sdev' : args['--art-sdev'],
                           '--seqSys' : args['--art-seqSys']}
-            fq_files = sim_illumina(F, str(barcode),
-                                    seq_depth=float(args['--seq-depth']),
-                                    total_barcodes=int(float(args['--barcode-total'])),
-                                    art_params=art_params, debug=args['--debug'])
-    return fq_files
-    
+            fasta_files = sim_illumina(fasta_file, str(barcode),
+                                 seq_depth=float(args['--seq-depth']),
+                                 total_barcodes=int(float(args['--barcode-total'])),
+                                 art_params=art_params, debug=args['--debug'])
+            read_fq_files.append(fasta_files)
+            frag_tsv_files.append(tsv_file)
+
+    return [read_fq_files, frag_tsv_files]
+
+def format_params(d):
+    dd = {}
+    for k,v in d.items():
+        if v == True:
+            dd[k] = ''
+        elif v == False:
+            continue
+        else:
+            dd[k] = v
+    return dd
+
 def sim_illumina(frag_fasta, barcode, seq_depth, total_barcodes, art_params, debug=False):
     """Simulating illumina reads for each fragment from each barcode
     Parameters
@@ -104,9 +123,12 @@ def sim_illumina(frag_fasta, barcode, seq_depth, total_barcodes, art_params, deb
         art_illumina parameters
     debug : bool
         debug mode 
-    """
+    """    
     output_prefix = os.path.splitext(frag_fasta)[0] + '_'
 
+    # formatting params
+    art_params = format_params(art_params)
+    
     # calculate fold coverage to simulate
     fold = calc_fold(frag_fasta, seq_depth, total_barcodes, art_params)
     
@@ -176,8 +198,36 @@ def calc_fold(frag_fasta, seq_depth, total_barcodes, art_params):
     
     return fold
 
+def combine_frag_tsv(tsv_files, output_dir, debug=False):
+    """ Concat all genome fragment tsv files
+    Parameters
+    ----------
+    tsv_files : iterable
+        Iterable of fragment tsv files
+    output_dir : str
+        Final output directory for read files
+    debug : bool
+        Debug mode
+    """
+    # writing files
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+    out_file = os.path.join(output_dir, 'fragments.tsv')
+    ## header
+    with open(out_file, 'w') as outF:
+        outF.write('\t'.join(['Barcode', 'Frag_ID',
+                              'Genome', 'Contig',
+                              'Frag_start', 'Frag_end']) + '\n')
+    ## body
+    for F in list(set(tsv_files)):
+        with open(F, 'r') as inF, open(out_file, 'a') as outF:
+            for line in inF:
+                outF.write(line)
+            
+    sys.stderr.write('File written: {}\n'.format(out_file))
+
 def combine_reads(fq_files, output_dir, debug=False):
-    """ Concat all reads
+    """ Concat all read files
     Parameters
     ----------
     fq_files : iterable
@@ -186,7 +236,7 @@ def combine_reads(fq_files, output_dir, debug=False):
         Final output directory for read files
     debug : bool
         Debug mode
-    """
+    """    
     # split by read pairs
     R1_files = [x[0] for x in fq_files]
     try:
@@ -204,13 +254,24 @@ def combine_reads(fq_files, output_dir, debug=False):
         R2_files = _combine_reads(R2_files, output_dir, 'R2.fq')
 
 def _combine_reads(read_files, out_dir, out_file):
-    """Combining temporary read files
+    """Combining temporary read files.
+    (eg., @ST-J00101:121:HYCGGBBXX:5:1101:30533:1191 BX:Z:A58B91C07D86).
+
     """
+    #template = '@ST-J00101:136:FC706VJ:1:1:{}:{} BX:Z:{}'
     out_file = os.path.join(out_dir, out_file)
-    cmd = 'cat {} > {}'.format(' '.join(read_files), out_file)
-    res = subprocess.run(cmd, check=True, shell=True, stdout=subprocess.PIPE)
+    with open(out_file, 'w') as outF:
+        for i,F in enumerate(read_files):
+            with open(F, 'r') as inF:
+                for ii,line in enumerate(inF):
+                    if ii % 4 == 0:
+                        line = line.split('-')
+                        outF.write('{} BX:Z:{}\n'.format(line[0],
+                                                         line[1]))
+                    else:
+                        outF.write(line)
+                        
     sys.stderr.write('File written: {}\n'.format(out_file))
-    return res
         
 def select_refs(n_frags, genome_table):
     """Selecting genomes (with replacement)
@@ -253,7 +314,9 @@ def sim_frags(refs, n_frags, frag_size_loc, frag_size_scale,
     return refs
     
 def parse_frags(refs, barcode, out_dir):
-    """Parsing fragment from a genome and writing them to a file
+    """Parsing fragment from a genome and writing them to a file.
+    Giving each simulated fragment a UUID. 
+
     Parameters
     ----------
     refs : pd.dataframe
@@ -263,10 +326,10 @@ def parse_frags(refs, barcode, out_dir):
     out_dir : str
         Output directory
     """
-    regex = re.compile(r'[ ;:,(){]')
+    regex = re.compile(r'[ ;:,(){|]+')
     # fasta file of genome
     taxon = refs['Taxon'].unique()[0]
-    assert('|' not in taxon)
+    taxon = regex.sub('_', taxon)
     fasta_file = refs['Fasta'].unique()[0]
     # loading fasta
     f = Fasta(fasta_file)
@@ -274,35 +337,64 @@ def parse_frags(refs, barcode, out_dir):
     for x in contig_ids:
         assert('|' not in x)
     # output files
-    out_file = os.path.join(out_dir, str(barcode) + '.fasta')
+    prefix = '{}__{}'.format(barcode, taxon)
+    out_file_fasta = os.path.join(out_dir, prefix + '.fasta')
+    out_file_tsv = os.path.join(out_dir, prefix + '.tsv')
+     
     contigs = []
-    with open(out_file, 'w') as outF:
-        # for each frag to simulate
-        frag_cnt = 0
+    with open(out_file_fasta, 'w') as outF, open(out_file_tsv, 'w') as outT:
+        # each frag to simulate for target barcode
         for idx,row in refs.iterrows():
             frag_size = int(row['Frag_size'])
             shuffle(contig_ids)
             for contig_id in contig_ids:
                 contig_len = len(f[contig_id])
                 if contig_len >= frag_size:
+                    frag_uuid = str(uuid.uuid4()).replace('-', '')
                     frag_max_end = contig_len - frag_size
                     assert frag_max_end >= 0
                     frag_start = np.random.randint(0, frag_max_end)
                     frag_end = frag_start + frag_size
-                    # writing fragment (taxon, contig, start, end)
-                    seqID = '{}|{}|{}|{}'.format(taxon,
-                                                 contig_id,
-                                                 frag_start,
-                                                 frag_end)
-                    seqID = re.sub(regex, '_', seqID)
-                    outF.write('>{}\n{}\n'.format(seqID, f[contig_id][frag_start:frag_end]))
+                    ## writing sequence
+                    outF.write('>{}\n{}\n'.format(frag_uuid,
+                                                  f[contig_id][frag_start:frag_end]))
                     contigs.append(contig_id)
+                    # writing tsv of positions
+                    outT.write('\t'.join([str(barcode),
+                                          str(frag_uuid),
+                                          str(taxon),
+                                          str(contig_id),
+                                          str(frag_start),
+                                          str(frag_end)]) + '\n')
                     break
+                
     # assert that frag was created
     if len(contigs) < refs.shape[0]:
         msg = 'For taxon "{}", cannot find contig with length >= fragment size ({})'
         raise ValueError(taxon, msg.format(frag_size))
-    
-    return out_file
 
+    return [out_file_fasta, out_file_tsv]
 
+def barcodes(n):
+    """Return an array (len=n) of barcode IDs
+    # barcode naming: 
+      The 12-bp long i5-barcode is composed of 5bp "A-part"
+      connected to a 6bp "C-part" with a constant 1bp A-handle.
+      The 13-bp long i7-barcode is composed of 6bp "D-part" 
+      connected to a 6bp "B-part" with a constant 1bp C-handle.
+      In total we have 96 different A, B, C, D parts = 85 million combinations.
+    Parameters
+    ----------
+    n : int
+        number of barcodes
+    """
+    func = np.vectorize(_barcode_ids)
+    return func(np.arange(n))
+
+def _barcode_ids(start=1, end=96):
+    x = _barcode_id('A') + _barcode_id('B') + _barcode_id('C') + _barcode_id('D')
+    return x
+
+def _barcode_id(Char, start=1, end=96):
+    x = Char + '{0:02d}'.format(np.random.randint(start,end,dtype='int'))
+    return x

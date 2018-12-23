@@ -12,6 +12,7 @@ from MGSIM.Commands import Communities
 from MGSIM.Commands import Genome_download
 from MGSIM.Commands import Genome_rename
 from MGSIM.Commands import Reads
+from MGSIM.Commands import HtReads
 
 def main(args=None):
     """Main entry point for application

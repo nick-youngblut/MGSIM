@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 ## package
 from MGSIM import Utils
+from MGSIM import SimHtReads
 from MGSIM.Commands import HtReads as HtReads_CMD
 
 # data dir
@@ -18,6 +19,15 @@ data_dir = os.path.join(test_dir, 'data')
 
 
 # tests
+def test_barcode_gen():
+    """Testing the generation of barcodes
+    """
+    n_barcodes = 1000
+    barcodes = SimHtReads.barcodes(n_barcodes)
+    assert len(barcodes) == n_barcodes
+    assert type(barcodes) is np.ndarray
+
+
 def test_main():
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')

@@ -46,6 +46,9 @@ environment will be downloaded during the `setup.py install`
 In the MGSIM base directory, use the command `pytest` to
 run all of the tests.
 
+To run tests on a particular test file:
+
+`pytest -s path/to/the/test/file`
 
 # HOW-TO
 

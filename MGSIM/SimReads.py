@@ -272,7 +272,7 @@ def combine_reads_by_sample(sample, fq_files, temp_dir, file_prefix, output_dir,
     return [R1_files, R2_files]
         
 def _combine_reads(read_files, output_dir, output_file):
-    """Combine fastq read files into 1 read file
+    """Combine fastq read files into 1 read file.
     Parameters
     ----------
     read_files : list
