@@ -21,3 +21,8 @@ def test_cmd():
     acc_tbl = os.path.join(data_dir, 'genome_download.txt')
     args = ['-d', data_dir, acc_tbl, '--debug']
     Genome_download_CMD.opt_parse(args)
+
+def test_cmd_rename():
+    acc_tbl = os.path.join(data_dir, 'genome_download.txt')
+    args = ['-d', data_dir, acc_tbl, '--debug', '-r']
+    Genome_download_CMD.opt_parse(args)

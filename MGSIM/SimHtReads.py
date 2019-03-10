@@ -6,6 +6,7 @@ import sys
 import re
 import time
 import uuid
+import logging
 import subprocess
 from glob import glob
 from pprint import pprint
@@ -23,7 +24,11 @@ from scipy.stats import truncnorm
 ## application
 from MGSIM import Utils
 
+# logging
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
+
+# functions
 def bin_barcodes(barcodes, binsize=1000):
     """Binning barcodes into chunks
     Parameters
@@ -224,7 +229,7 @@ def combine_frag_tsv(tsv_files, output_dir, debug=False):
             for line in inF:
                 outF.write(line)
             
-    sys.stderr.write('File written: {}\n'.format(out_file))
+    logging.info('File written: {}\n'.format(out_file))
 
 def combine_reads(fq_files, output_dir, debug=False):
     """ Concat all read files
@@ -271,7 +276,7 @@ def _combine_reads(read_files, out_dir, out_file):
                     else:
                         outF.write(line)
                         
-    sys.stderr.write('File written: {}\n'.format(out_file))
+    logging.info('File written: {}\n'.format(out_file))
         
 def select_refs(n_frags, genome_table):
     """Selecting genomes (with replacement)

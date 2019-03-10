@@ -5,6 +5,7 @@ import os
 import sys
 import re
 import time
+import logging
 import subprocess
 from glob import glob
 from shutil import rmtree
@@ -17,7 +18,11 @@ from Bio import SeqIO
 ## application
 from MGSIM import Utils
 
+# logging
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
+
+# functions
 def tidy_taxon_names(x):
     """Remove special characters from taxon names
     """
@@ -147,7 +152,7 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
         os.makedirs(output_dir)
         
     # simulate per sample
-    sys.stderr.write('Simulating reads...\n')
+    logging.info('Simulating reads...\n')
     func = partial(sim_art,
                    art_params=art_params,
                    temp_dir=temp_dir,
@@ -160,7 +165,7 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
     fq_files = list(fq_files)
 
     # combining all reads by sample
-    sys.stderr.write('Combining simulated reads by sample...\n')    
+    logging.info('Combining simulated reads by sample...\n')    
     comms = list(set([x[0] for x in sample_taxon]))
     func = partial(combine_reads_by_sample,
                    fq_files=fq_files,
@@ -176,6 +181,7 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
     res = list(res)
 
     # removing temp dir
+    logging.info('Removing temp directory...\n')
     rmtree(temp_dir)
     
     # status

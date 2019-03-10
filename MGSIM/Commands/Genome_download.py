@@ -14,6 +14,7 @@ Options:
   -d=<d>            Output directory. [Default: .]
   -e=<e>            Email to use for NCBI queries. [Default: blank@gmail.com]
   -n=<n>            Number of cpus. [Default: 1]
+  -r                Rename genome sequences based on taxon name?
   --debug           Debug mode (no multiprocessing).
   -h --help         Show this screen.
   --version         Show version.

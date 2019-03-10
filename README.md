@@ -24,7 +24,7 @@ Metagenome read simulation for multiple synthetic communities
 
 ## Dependencies
 
-* python 3 (or 2.7)
+* python 3
 * conda-forge::numpy
 * conda-forge::pandas
 * conda-forge::docopt
@@ -64,6 +64,11 @@ To run tests on a particular test file:
 
 `MGSIM reads -h`
 
+
+# TODO
+
+* handle taxon names that include spaces
+* include logging
 
 # CHANGELOG
 
