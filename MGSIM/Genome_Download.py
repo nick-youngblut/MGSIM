@@ -45,9 +45,9 @@ def main(args):
     print('\t'.join(['Taxon', 'Accession', 'Fasta']))
     for x in acc_tbl:
         # tidy taxon names
-        x[0] = re.sub(r'[()\/:;, ]+', '_', str(x[0]))
+        #x[0] = re.sub(r'[()\/:;, ]+', '_', x[0])
         # writing line
-        print('\t'.join(x))
+        print('\t'.join([str(y) for y in x]))
         
 def e_query(x, email, outdir, rename=False):
     """Efetch query for one genome
@@ -78,7 +78,7 @@ def e_query(x, email, outdir, rename=False):
             continue
         break
         
-    # writing out file
+    # writing out file (renaming sequence headers if needed)
     if rename:
         out_file = os.path.join(outdir, '.' + str(uuid.uuid4()) + '.fna')
     else:
@@ -87,15 +87,41 @@ def e_query(x, email, outdir, rename=False):
         outF.write(''.join([x for x in records]) + '\n')
     records.close()
 
-    if rename:
+    # checking that genome is formatted correctly formatted (and complete)
+    out_file = check_genome(out_file)
+
+    # renaming sequence headers (if needed)    
+    if out_file is not None and rename:
         in_file = out_file
         out_file = os.path.join(outdir, genome_id + '.fna')
         genome_rename(in_file, out_file, genome_id)
-    
+        
     # status
     msg = 'File written: {}\n'
     logging.info(msg.format(out_file))
     return [genome_id, acc, out_file]
+
+def check_genome(genome_fasta):
+    """Checking that genome fasta is formatted correctly
+    """
+    N_cnt = 0
+    len_cnt = 0
+    for seq_record in SeqIO.parse(genome_fasta, 'fasta'):
+        len_cnt += len(seq_record)
+        N_cnt += seq_record.seq.upper().count('N')
+
+    if len_cnt < 1000:
+        msg = 'Genome length < 1000bp; removing genome: {}'
+        logging.warning(msg.format(genome_fasta))
+        os.remove(genome_fasta)
+        return(None)
+    if N_cnt / float(len_cnt) > 0.5:
+        msg = 'WARNING: genome sequences are >50% N\'s; removing genome: {}'
+        logging.warning(msg.format(genome_fasta))
+        os.remove(genome_fasta)
+        return(None)
+
+    return genome_fasta
 
 def genome_rename(in_file, out_file, taxon):
     """Renaming sequences in genome file.
