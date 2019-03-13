@@ -3,3 +3,5 @@ Escherichia coli_K-12 MG1655	NC_000913
 Clostridium perfringens ATCC (13124)	NC_008261
 Christensenella minuta ASM165270v1	NZ_LWGY00000000.1
 Prevotella copri DSM 18205	NZ_ACBX00000000.2
+Salmonella enterica subsp. enterica serovar Typhi str. CT18	GCA_000195995.1
+Yersinia pestis CO92	GCA_000009065.1

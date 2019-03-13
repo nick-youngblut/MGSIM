@@ -44,36 +44,44 @@ def main(args):
     # writing out new acc_tbl to STDOUT
     print('\t'.join(['Taxon', 'Accession', 'Fasta']))
     for x in acc_tbl:
-        # tidy taxon names
-        #x[0] = re.sub(r'[()\/:;, ]+', '_', x[0])
         # writing line
         print('\t'.join([str(y) for y in x]))
-        
-def e_query(x, email, outdir, rename=False):
-    """Efetch query for one genome
-    x : [taxon, accession]
+
+def query_assembly(acc, genome_id, outdir, rename=False):
+    """Querying assembly db
     """
-    genome_id,acc = x[:2]
-    logging.info('Downloading genome: {}'.format(genome_id))
+    msg = '  Trying to query the "assembly" db with accession: {}'
+    logging.info(msg.format(acc))
+    
+    # query assembly
+    record = Entrez.read(Entrez.esearch(db="assembly", term=acc))
+    accs = []
+    for ID in record['IdList']:
+        rec = Entrez.read(Entrez.esummary(db="assembly", id=ID, report="full"))
+        accession_id = rec['DocumentSummarySet']['DocumentSummary'][0]['AssemblyAccession']
+        refseq_id = Entrez.read(Entrez.esearch(db="nucleotide", term=accession_id))['IdList'][0]
+        accs.append(refseq_id)
+    if len(accs) < 1:
+        return None
+    if len(accs) > 1:
+        msg = '  WARNING: >1 refseq accession for assembly: {}'
+        logging.warning(msg.format(acc))
 
-    # querying 
-    Entrez.email = email
-    search = acc + '[Accession]'
-
+    # querying nucleotide
+    acc = accs[0]
     while 1:
         try:
-            handle = Entrez.read(Entrez.esearch(db="nucleotide",
-                                                term=search,
+            genomeIds = Entrez.read(Entrez.esearch(db="nucleotide",
+                                                term=acc,
                                                 retmode="xml",
-                                                retmax=1))
-            genomeIds = handle['IdList']
+                                                retmax=1))['IdList']
             records = Entrez.efetch(db="nucleotide",
                                     id=genomeIds,
                                     rettype="fasta",
                                     retmode="text")
         except IOError:
-            msg = 'Network error! Trying again for accession: {}\n'
-            sys.stderr.write(msg.format(acc))
+            msg = 'WARNING: Network error! Trying again for accession: {}'
+            logging.warning(msg.format(acc))
             time.sleep(10)
             continue
         break
@@ -87,8 +95,56 @@ def e_query(x, email, outdir, rename=False):
         outF.write(''.join([x for x in records]) + '\n')
     records.close()
 
+    # checking genome fasta
+    out_file = check_genome(out_file)
+    
+    return out_file
+        
+def e_query(x, email, outdir, rename=False):
+    """Efetch query for one genome
+    x : [taxon, accession]
+    """
+    genome_id,acc = x[:2]
+    logging.info('Downloading genome: {}'.format(genome_id))
+
+    # output fasta file name
+    if rename:
+        out_file = os.path.join(outdir, '.' + str(uuid.uuid4()) + '.fna')
+    else:
+        out_file = os.path.join(outdir, genome_id + '.fna')
+    
+    # querying 
+    Entrez.email = email
+
+    ## query nucleotide db
+    logging.info('  Querying "nucleotide" db with accession: {}'.format(acc))
+    search = acc + '[Accession]'
+    while 1:
+        try:
+            genomeIds = Entrez.read(Entrez.esearch(db="nucleotide",
+                                                term=acc,
+                                                retmode="xml",
+                                                retmax=1))['IdList']
+            records = Entrez.efetch(db="nucleotide",
+                                    id=genomeIds,
+                                    rettype="fasta",
+                                    retmode="text")
+        except IOError:
+            msg = 'WARNING: Network error! Trying again for accession: {}'
+            logging.warning(msg.format(acc))
+            time.sleep(10)
+            continue
+        break
+        
+    # writing out file (renaming sequence headers if needed)
+    with open(out_file, 'w') as outF:
+        outF.write(''.join([x for x in records]) + '\n')
+    records.close()
+
     # checking that genome is formatted correctly formatted (and complete)
     out_file = check_genome(out_file)
+    if out_file is None:
+        out_file = query_assembly(acc, genome_id, outdir, rename=rename)
 
     # renaming sequence headers (if needed)    
     if out_file is not None and rename:
@@ -97,7 +153,7 @@ def e_query(x, email, outdir, rename=False):
         genome_rename(in_file, out_file, genome_id)
         
     # status
-    msg = 'File written: {}\n'
+    msg = '  File written: {}'
     logging.info(msg.format(out_file))
     return [genome_id, acc, out_file]
 
@@ -111,12 +167,12 @@ def check_genome(genome_fasta):
         N_cnt += seq_record.seq.upper().count('N')
 
     if len_cnt < 1000:
-        msg = 'Genome length < 1000bp; removing genome: {}'
+        msg = '  WARNING: Genome length < 1000bp; removing genome: {}'
         logging.warning(msg.format(genome_fasta))
         os.remove(genome_fasta)
         return(None)
     if N_cnt / float(len_cnt) > 0.5:
-        msg = 'WARNING: genome sequences are >50% N\'s; removing genome: {}'
+        msg = '  WARNING: Genome sequences are >50% N\'s; removing genome: {}'
         logging.warning(msg.format(genome_fasta))
         os.remove(genome_fasta)
         return(None)
@@ -127,7 +183,7 @@ def genome_rename(in_file, out_file, taxon):
     """Renaming sequences in genome file.
     All will be named based on `taxon`
     """
-    logging.info('Renaming genome seqs to: {}'.format(taxon))
+    logging.info('  Renaming genome seqs to: {}'.format(taxon))
 
     # number of sequences in the genome fasta file
     seq_cnt = 0

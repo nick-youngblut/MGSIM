@@ -25,7 +25,11 @@ Description:
   * tab-delimited
   * must contain 2 columns
     * "Taxon" = taxon name
-    * "Accession" = NCBI accession used for downloading
+    * "Accession" = NCBI accession used for downloading 
+      * Possible accessions:
+         * ncbi nucleotide db
+         * ncbi assembly db
+         * ftp url to genome (direct download)
   * other columns are allowed
 
   Output
