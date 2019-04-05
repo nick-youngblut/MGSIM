@@ -23,3 +23,9 @@ def test_main():
     output_prefix = os.path.join(data_dir, 'comm')
     args = [genomeList, output_prefix, '--n-comm', 2]
     Communities_CMD.opt_parse(args)
+
+def test_main_ncomm1():
+    genomeList = os.path.join(data_dir, 'genome_list.txt')
+    output_prefix = os.path.join(data_dir, 'comm')
+    args = [genomeList, output_prefix, '--n-comm', 1, '--richness', 1]
+    Communities_CMD.opt_parse(args)

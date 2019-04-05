@@ -31,3 +31,9 @@ def test_cmd_badAcc():
     acc_tbl = os.path.join(data_dir, 'genome_download_badAcc.txt')
     args = ['-d', data_dir, acc_tbl, '--debug', '-r']
     Genome_download_CMD.opt_parse(args)
+
+def test_cmd_dupTaxa():
+    acc_tbl = os.path.join(data_dir, 'genome_download_dupTaxa.txt')
+    args = ['-d', data_dir, acc_tbl, '--debug', '-r']
+    with pytest.raises(ValueError):
+        Genome_download_CMD.opt_parse(args)

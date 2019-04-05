@@ -316,8 +316,8 @@ class SimComms(_Comm):
             # ordering columns
             df.columns = ['taxon_name', 'library', 'rel_abund_perc']            
             # sorting 
-            df = df.sort_values(by=['library','rel_abund_perc'], 
-                                ascending=[1,0])
+            df.sort_values(by=['library','rel_abund_perc'], 
+                           axis=0, ascending=[True,False], inplace=True)
             # converting any NAs to zeros
             df.fillna(0, inplace=True)
             # tidy taxon names

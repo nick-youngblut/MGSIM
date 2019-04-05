@@ -225,6 +225,10 @@ def parse_acc_table(infile):
     # removing non-safe characters from taxon labels
     df['Taxon'] = df['Taxon'].apply(lambda x: re.sub('[^A-Za-z0-9-]+', '_', x))
     df['Taxon'] = df['Taxon'].apply(lambda x: re.sub('_+$', '', x))
+    # checking for duplicates
+    if any(df.duplicated(subset=['Taxon'])):
+        raise ValueError('Duplicate taxon names in the accession table')
+    
     # convert df to list of lists
     tbl = []
     for i,x in df.iterrows():
