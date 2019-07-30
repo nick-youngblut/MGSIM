@@ -34,9 +34,11 @@ Metagenome read simulation for multiple synthetic communities
 
 ## Install
 
+It is best to used a conda environment, but you can just run the following:
+
 `python setpy.py install`
 
-> In theory, dependencies are NOT found in your conda
+> In theory, dependencies that are NOT found in your conda
 environment will be downloaded during the `setup.py install`
 
 ## Testing
@@ -52,6 +54,10 @@ To run tests on a particular test file:
 
 # HOW-TO
 
+See all subcommands:
+
+`MGSIM --list`
+
 ## Download genomes
 
 `MGSIM genome_download -h`
@@ -62,7 +68,13 @@ To run tests on a particular test file:
 
 ## Simulate reads for each genome in each community
 
+### Simulating Illumina reads
+
 `MGSIM reads -h`
+
+### Simulating haplotagging reads
+
+`MGSIM ht_reads -h`
 
 
 # TODO
@@ -76,6 +88,8 @@ To run tests on a particular test file:
 
 
 # LICENSE
+
+See the `LICENSE` file.
 
 [[top](#sections)]
 
