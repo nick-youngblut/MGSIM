@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 """
-htreads: simulating haplotagging reads
+ht_reads: simulating haplotagging reads
 
 Usage:
-  htreads [options] <genome_table> <abund_table> <output_dir>
-  htreads -h | --help
-  htreads --version
+  ht_reads [options] <genome_table> <abund_table> <output_dir>
+  ht_reads -h | --help
+  ht_reads --version
 
 Options:
   <genome_table>          Taxon genome info.
@@ -58,7 +58,7 @@ Description:
     * "Community" = community ID (ie., sample ID)
     * "Taxon" = taxon name
     * "Perc_rel_abund" = percent relative abundance of the taxon
-  * NOTE: For HtReads, only the first community will be used (no multi-samples)
+  * NOTE: For ht_reads, only the first community will be used (no multi-samples)
 
   genome_table
   ------------

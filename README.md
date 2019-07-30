@@ -52,6 +52,10 @@ To run tests on a particular test file:
 
 `pytest -s path/to/the/test/file`
 
+Example:
+
+`pytest -s ./tests/test_Genome_download.py`
+
 # HOW-TO
 
 See all subcommands:
