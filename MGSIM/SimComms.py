@@ -303,7 +303,7 @@ class SimComms(_Comm):
             Write table in long format
         """
         df =  pd.concat([x.taxa for x in self.values()],
-                        axis=1)
+                        axis=1, sort=False)
 
         write_index = True
         df.columns = self.keys()
