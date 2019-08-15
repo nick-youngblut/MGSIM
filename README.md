@@ -1,7 +1,7 @@
 MGSIM
 =====
 
-Metagenome read simulation for multiple synthetic communities
+Metagenome read simulation of multiple synthetic communities
 
 #### Sections
 
@@ -94,7 +94,7 @@ See all subcommands:
 
 # LICENSE
 
-See the `LICENSE` file.
+See the `LICENSE` file
 
 [[top](#sections)]
 
