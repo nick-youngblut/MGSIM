@@ -26,13 +26,7 @@ Metagenome read simulation of multiple synthetic communities
 
 ## Dependencies
 
-* python 3
-* conda-forge::numpy
-* conda-forge::pandas
-* conda-forge::docopt
-* conda-forge::scipy
-* conda-forge::biopython
-* bioconda::art
+See the `.travis.yml` file for setup info.
 
 ## Install
 
