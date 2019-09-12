@@ -1,4 +1,0 @@
-Taxon	Accession
-Escherichia coli_K-12 MG1655	NC_000913
-Clostridium_perfringens ATCC (13124)	NC_008261
-Methanosarcina barkeri [MS]	NZ_CP009528.1
