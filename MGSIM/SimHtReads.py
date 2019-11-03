@@ -47,7 +47,7 @@ def bin_barcodes(barcodes, binsize=1000):
                        np.arange(0,barcodes.shape[0],binsize))
     return [barcodes[bins == x] for x in np.unique(bins)]
 
-def sim_barcode_reads(barcodes, genome_table, abund_table, args):
+def sim_barcode_reads(barcodes, genome_table, abund_table, args, rndSeed=None):
     """Simulate reads for each fragment associated with each barcode
     Parameters
     ----------
@@ -59,6 +59,8 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, args):
         Table listing relative abundances of each taxon
     args: dict
         Command line args 
+    rndSeed: int
+        --rndSeed for ART
     """
     genome_table = genome_table.merge(abund_table,on=['Taxon'])
 
@@ -92,10 +94,13 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, args):
                           '--mflen' : args['--art-mflen'],
                           '--sdev' : args['--art-sdev'],
                           '--seqSys' : args['--art-seqSys']}
+            if rndSeed is not None:
+                art_params['--rndSeed'] = rndSeed
             fasta_files = sim_illumina(fasta_file, str(barcode),
-                                 seq_depth=float(args['--seq-depth']),
-                                 total_barcodes=int(float(args['--barcode-total'])),
-                                 art_params=art_params, debug=args['--debug'])
+                                       seq_depth=float(args['--seq-depth']),
+                                       total_barcodes=int(float(args['--barcode-total'])),
+                                       art_params=art_params,
+                                       debug=args['--debug'])
             read_fq_files.append(fasta_files)
             frag_tsv_files.append(tsv_file)
 
@@ -150,12 +155,14 @@ def sim_illumina(frag_fasta, barcode, seq_depth, total_barcodes, art_params, deb
     if debug is True:
         sys.stderr.write('CMD: ' + cmd + '\n')
     try:
-        res = subprocess.run(cmd, check=True, shell=True, stdout=subprocess.PIPE)
+        res = subprocess.run(cmd, check=True, shell=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         raise e
-    res = res.stdout.decode()
     if debug is True:
-        sys.stderr.write(res + '\n')
+        sys.stderr.write(res.stderr.decode() + '\n')
+        sys.stderr.write(res.stdout.decode() + '\n')
 
     # check that files have been created
     R0_file = output_prefix + '.fq'
@@ -229,7 +236,7 @@ def combine_frag_tsv(tsv_files, output_dir, debug=False):
             for line in inF:
                 outF.write(line)
             
-    logging.info('File written: {}\n'.format(out_file))
+    logging.info('File written: {}'.format(out_file))
 
 def combine_reads(fq_files, output_dir, debug=False):
     """ Concat all read files
@@ -276,7 +283,7 @@ def _combine_reads(read_files, out_dir, out_file):
                     else:
                         outF.write(line)
                         
-    logging.info('File written: {}\n'.format(out_file))
+    logging.info('File written: {}'.format(out_file))
         
 def select_refs(n_frags, genome_table):
     """Selecting genomes (with replacement)

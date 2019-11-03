@@ -40,6 +40,8 @@ Options:
                           [Default: 10]
   --art-seqSys=<as>       art_iilumina "seqSys" parameter.
                           [Default: HS25]
+  --rndSeed=<rs>          Random Seed for Art. If None, then randomly set.
+                          [Default: None]
   --tmp-dir=<td>          Temporary directory. 
                           [Default: .sim_reads]
   -n=<n>                  Number of cpus. 
@@ -156,6 +158,13 @@ def main(args):
     x = abund_table.Community[0]
     abund_table = abund_table.loc[abund_table.Community == x,]
 
+    # Sim Params
+    ## random seed
+    if args['--rndSeed'] is None or args['--rndSeed'] == 'None':
+        rndSeed = None
+    else:
+        rndSeed = int(args['--rndSeed'])
+    
     ## batching by barcodes
     ### creating barcode ID array
     n_barcodes = int(float(args['--barcode-total']))
@@ -163,8 +172,9 @@ def main(args):
     ### simulating barcodes
     func = partial(SimHtReads.sim_barcode_reads,
                    genome_table=genome_table,
-                   abund_table=abund_table,
-                   args=args)
+                   abund_table=abund_table,                   
+                   args=args,
+                   rndSeed=rndSeed)
     barcodes = SimHtReads.bin_barcodes(barcodes,args['--barcode-chunks'])
     if args['--debug']:
         files = map(func, barcodes)

@@ -23,8 +23,7 @@ def test_main():
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
     temp_dir = os.path.join(data_dir, 'temp_read_files')
     output_prefix = os.path.join(data_dir, 'TEST')
-    args = ['--debug',
-            '--art-paired',
+    args = ['--art-paired',
             '--tmp-dir', temp_dir,
             '--sr-seq-depth', 1e4, 
             genome_table, abund_table, output_prefix]
@@ -47,8 +46,7 @@ def test_main_unpaired():
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
     temp_dir = os.path.join(data_dir, 'temp_read_files')
     output_prefix = os.path.join(data_dir, 'TEST_unpaired')
-    args = ['--debug',
-            '--art-mflen', 0,
+    args = ['--art-mflen', 0,
             '--tmp-dir', temp_dir,
             '--sr-seq-depth', 1e4, 
             genome_table, abund_table, output_prefix]

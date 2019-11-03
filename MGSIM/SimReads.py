@@ -102,7 +102,7 @@ def sample_taxon_list(genome_table, abund_table):
     return sample_taxon
 
 def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
-                 temp_dir, nproc=1, debug=False):
+                 temp_dir, nproc=1, rndSeed=None, debug=False):
     """Simulate illumina reads
     Parameters
     ----------
@@ -152,10 +152,11 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
         os.makedirs(output_dir)
         
     # simulate per sample
-    logging.info('Simulating reads...\n')
+    logging.info('Simulating reads...')
     func = partial(sim_art,
                    art_params=art_params,
                    temp_dir=temp_dir,
+                   rndSeed=rndSeed,
                    debug=debug)
     if debug is True:
         fq_files = map(func, sample_taxon)
@@ -165,7 +166,7 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
     fq_files = list(fq_files)
 
     # combining all reads by sample
-    logging.info('Combining simulated reads by sample...\n')    
+    logging.info('Combining simulated reads by sample...')    
     comms = list(set([x[0] for x in sample_taxon]))
     func = partial(combine_reads_by_sample,
                    fq_files=fq_files,
@@ -181,16 +182,16 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
     res = list(res)
 
     # removing temp dir
-    logging.info('Removing temp directory...\n')
+    logging.info('Removing temp directory...')
     rmtree(temp_dir)
     
     # status
     for sample_list in res:
         for file_name in sample_list:
             if file_name is not None:
-                print('File written: {}'.format(file_name))
+                logging.info('File written: {}'.format(file_name))
 
-def sim_art(x, art_params, temp_dir, debug=False):
+def sim_art(x, art_params, temp_dir, rndSeed=None, debug=False):
     """Simulate illumina reads
     Parameters
     ----------
@@ -216,19 +217,24 @@ def sim_art(x, art_params, temp_dir, debug=False):
     cmd = 'art_illumina {art_params} --noALN -f {fold} -i {input} -o {output_prefix}'
     cmd = cmd.format(art_params=art_params,
                      fold=fold,
+                     rndSeed=rndSeed,
                      input=fasta,
                      output_prefix=output_prefix)
+    if rndSeed is not None:
+        cmd += ' --rndSeed {rndSeed}'.format(rndSeed)
 
     ## system call
     if debug is True:
         sys.stderr.write('CMD: ' + cmd + '\n')
     try:
-        res = subprocess.run(cmd, check=True, shell=True, stdout=subprocess.PIPE)
+        res = subprocess.run(cmd, check=True, shell=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         raise e
-    res = res.stdout.decode()
     if debug is True:
-        sys.stderr.write(res + '\n')
+        sys.stderr.write(res.stderr.decode() + '\n')
+        sys.stderr.write(res.stdout.decode() + '\n')
 
     # check that files have been created
     R0_file = output_prefix + '.fq'

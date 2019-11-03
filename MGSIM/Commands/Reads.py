@@ -22,10 +22,12 @@ Options:
                       [Default: 200]
   --art-sdev=<ad>     art_illumina --sdev parameter.
                       [Default: 10]
-  --art-seqSys=<as>   art_iilumina --seqSys paramete.r
+  --art-seqSys=<as>   art_illumina --seqSys parameter.
                       [Default: HS25]
   --tmp-dir=<td>      Temporary directory
                       [Default: .sim_reads]
+  --rndSeed=<rs>      Random Seed for Art. If None, then randomly set.
+                      [Default: None]
   -n=<n>              Number of cpus. 
                       [Default: 1]
   --debug             Debug mode (no subprocesses; verbose output)
@@ -65,6 +67,7 @@ import sys,os
 import re
 from functools import partial
 import multiprocessing as mp
+import logging
 ## application
 from MGSIM import SimReads
 
@@ -88,6 +91,11 @@ def main(args):
         art_params.pop('--paired', None)
     if int(art_params['--mflen']) <= 0:
         art_params.pop('--mflen', None)
+    ### random seed
+    if args['--rndSeed'] is None or args['--rndSeed'] == 'None':
+        rndSeed = None
+    else:
+        rndSeed = int(args['--rndSeed'])
     ## read simulate
     SimReads.sim_illumina(sample_taxon,
                           output_dir=args['<output_dir>'],
@@ -95,6 +103,7 @@ def main(args):
                           art_params=art_params,
                           temp_dir=args['--tmp-dir'],
                           nproc=int(float(args['-n'])),
+                          rndSeed=rndSeed,
                           debug=args['--debug'])
     
 def opt_parse(args=None):
