@@ -38,6 +38,8 @@ Options:
                       (& global params).
                       Community-specific parameters can include:
                       (n_comm, richness, abund_dist)
+  --rnd-seed=<rs>     Seed for reprodicible simulations.
+                      [default: None]
   --debug             Debug mode
   --version           Show version.
   -h --help           Show this screen.
@@ -74,7 +76,7 @@ from MGSIM.SimComms import SimComms
 
 # functions
 def main(uargs):
-    # init    
+    # init
     SC = SimComms(taxon_list = uargs['<genome_table>'],
                   perm_perc = uargs['--perm-perc'],
                   shared_perc = uargs['--shared-perc'],
@@ -82,7 +84,8 @@ def main(uargs):
                   abund_dist = uargs['--abund-dist'],
                   abund_dist_params = uargs['--abund-dist-p'],
                   n_comm = uargs['--n-comm'],
-                  config = uargs['--config'])
+                  config = uargs['--config'],
+                  rnd_seed = uargs['--rnd-seed'])
     
     # making communities
     for comm_id in SC.keys():        

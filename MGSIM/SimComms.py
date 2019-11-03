@@ -8,7 +8,7 @@ try:
     from StringIO import StringIO
 except ModuleNotFoundError:
     from io import StringIO
-from random import randrange, sample, shuffle
+import random
 import re
 from functools import partial
 from itertools import chain
@@ -50,7 +50,7 @@ def random_insert_seq(l, seq):
     -------
     list : target list with `seq` values randomly inserted
     """
-    insert_locs = sample(range(len(l) + len(seq)), len(seq))
+    insert_locs = random.sample(range(len(l) + len(seq)), len(seq))
     inserts = dict(zip(insert_locs, seq))
     inputs = iter(l)
     return [inserts[pos] if pos in inserts else next(inputs)
@@ -95,7 +95,7 @@ class SimComms(_Comm):
     """
     def __init__(self, taxon_list, perm_perc, shared_perc,
                  richness, abund_dist, abund_dist_params,
-                 n_comm, config=None,
+                 n_comm, config=None, rnd_seed=None,
                  *args, **kwargs):
         """
         Parameters
@@ -111,8 +111,12 @@ class SimComms(_Comm):
         self.abund_dist = abund_dist
         self.abund_dist_params = str2dict(abund_dist_params)
         self.config = config
-        self.n_comm = n_comm    
+        self.n_comm = n_comm
+        self.rnd_seed = rnd_seed
 
+        if not self.rnd_seed is None and self.rnd_seed != 'None':
+            random.seed(int(self.rnd_seed))
+        
         # loading config; setting community parameters
         if config is not None:
             self.comm_params = self._load_config()
@@ -211,7 +215,7 @@ class SimComms(_Comm):
 
         # setting taxon_pool
         self.taxon_pool = df['Taxon']
-        shuffle(self.taxon_pool)
+        random.shuffle(self.taxon_pool)
 
         # setting genome fasta dict {Taxon : Fasta}
         self.genome_fasta = {}
@@ -393,7 +397,7 @@ class SimComms(_Comm):
         n_perm = int(round(perm_perc / 100 * comm.n_taxa,0))
         
         # permuting index of comm
-        perm_idx = sample(range(comm.n_taxa), n_perm)
+        perm_idx = random.sample(range(comm.n_taxa), n_perm)
         perm_ig = itemgetter(perm_idx)
         n_perm_idx = set(range(comm.n_taxa)) - set(perm_idx)
                 
