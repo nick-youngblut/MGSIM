@@ -37,7 +37,8 @@ def test_main():
             '--tmp-dir', temp_dir,
             '--barcode-total', 20,
             '--barcode-chunks', 2,
-            '--seq-depth', 1e3, 
+            '--seq-depth', 1e3,
+            '--rndSeed', 8294,
             genome_table, abund_table, output_prefix]
     HtReads_CMD.opt_parse(args)
 

@@ -25,7 +25,8 @@ def test_main():
     output_prefix = os.path.join(data_dir, 'TEST')
     args = ['--art-paired',
             '--tmp-dir', temp_dir,
-            '--sr-seq-depth', 1e4, 
+            '--sr-seq-depth', 1e4,
+            '--rndSeed', 8294,
             genome_table, abund_table, output_prefix]
     Reads_CMD.opt_parse(args)
 
@@ -48,6 +49,6 @@ def test_main_unpaired():
     output_prefix = os.path.join(data_dir, 'TEST_unpaired')
     args = ['--art-mflen', 0,
             '--tmp-dir', temp_dir,
-            '--sr-seq-depth', 1e4, 
+            '--sr-seq-depth', 1e4,
             genome_table, abund_table, output_prefix]
     Reads_CMD.opt_parse(args)

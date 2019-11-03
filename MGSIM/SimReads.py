@@ -221,7 +221,7 @@ def sim_art(x, art_params, temp_dir, rndSeed=None, debug=False):
                      input=fasta,
                      output_prefix=output_prefix)
     if rndSeed is not None:
-        cmd += ' --rndSeed {rndSeed}'.format(rndSeed)
+        cmd += ' --rndSeed {}'.format(rndSeed)
 
     ## system call
     if debug is True:
