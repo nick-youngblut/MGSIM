@@ -35,7 +35,7 @@ def main(args):
     logging.info('Downloading genomes via efetch...')
     nprocs = int(float(args['-n']))
     pool = Pool(nprocs)
-    func = partial(e_query, email=args['-e'], outdir=args['-d'], rename=args['-r'])
+    func = partial(e_query, email=args['-e'], outdir=args['-d'], rename=args['-r'], ambig_cutoff=['-a'])
     if args['--debug'] is True:
         acc_tbl = list(map(func, acc_tbl))
     else:
@@ -47,7 +47,7 @@ def main(args):
         # writing line
         print('\t'.join([str(y) for y in x]))
 
-def query_assembly(acc, genome_id, outdir, rename=False):
+def query_assembly(acc, genome_id, outdir, rename=False, ambig_cutoff=0):
     """Querying assembly db
     """
     msg = '  Trying to query the "assembly" db with accession: {}'
@@ -96,11 +96,11 @@ def query_assembly(acc, genome_id, outdir, rename=False):
     records.close()
 
     # checking genome fasta
-    out_file = check_genome(out_file)
+    out_file = check_genome(out_file, ambig_cutoff)
     
     return out_file
         
-def e_query(x, email, outdir, rename=False):
+def e_query(x, email, outdir, rename=False, ambig_cutoff=0):
     """Efetch query for one genome
     x : [taxon, accession]
     """
@@ -142,9 +142,10 @@ def e_query(x, email, outdir, rename=False):
     records.close()
 
     # checking that genome is formatted correctly formatted (and complete)
-    out_file = check_genome(out_file)
+    out_file = check_genome(out_file, ambig_cutoff)
     if out_file is None:
-        out_file = query_assembly(acc, genome_id, outdir, rename=rename)
+        out_file = query_assembly(acc, genome_id, outdir, rename=rename,
+                                  ambig_cutoff=ambig_cutoff)
 
     # renaming sequence headers (if needed)    
     if out_file is not None and rename:
@@ -157,14 +158,27 @@ def e_query(x, email, outdir, rename=False):
     logging.info(msg.format(out_file))
     return [genome_id, acc, out_file]
 
-def check_genome(genome_fasta):
+def check_genome(genome_fasta, ambig_cutoff=0):
     """Checking that genome fasta is formatted correctly
     """
+    ambig_chars = re.compile(r'[RYSWKMBVDH]')
     N_cnt = 0
+    ambig_cnt = 0
     len_cnt = 0
     for seq_record in SeqIO.parse(genome_fasta, 'fasta'):
         len_cnt += len(seq_record)
-        N_cnt += seq_record.seq.upper().count('N')
+        seq = seq_record.seq.upper()
+        N_cnt += seq.count('N')
+        ambig_cnt += len(ambig_chars.findall(str(seq)))
+            
+    if ambig_cnt > 0:
+        if ambig_cnt > ambig_cutoff:
+            msg = '  WARNING: no. of ambig nucleotides is {}; removing genome: {}'
+            logging.warning(msg.format(ambig_cnt, genome_fasta))
+            return(None)
+        else:
+            msg = '  WARNING: no. of ambig nucleotides is {}, but ambig-cutoff is {}, so keeping genome: {}'
+            logging.warning(msg.format(ambig_cnt, ambig_cutoff, genome_fasta))            
 
     if len_cnt < 1000:
         msg = '  WARNING: Genome length < 1000bp; removing genome: {}'

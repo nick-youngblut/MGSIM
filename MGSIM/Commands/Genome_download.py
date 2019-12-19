@@ -13,6 +13,7 @@ Options:
                     Use '-' if from STDIN.
   -d=<d>            Output directory. [Default: .]
   -e=<e>            Email to use for NCBI queries. [Default: blank@gmail.com]
+  -a=<a>            Number of ambiguous nucleotides allowed in a genome. [Default: 0]
   -n=<n>            Number of cpus. [Default: 1]
   -r                Rename genome sequences based on taxon name?
   --debug           Debug mode (no multiprocessing).

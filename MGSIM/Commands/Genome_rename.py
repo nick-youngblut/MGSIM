@@ -15,6 +15,8 @@ Options:
                   It must differ from the input file paths.
                   The path will be created if it doesn't exist.
                   [Default: .]
+  -a=<a>          Number of ambiguous nucleotides allowed in a genome. 
+                  [Default: 0]
   -n=<n>          Number of cpus. 
                   [Default: 1]
   --debug         Debug mode (no multiprocessing).
@@ -47,7 +49,7 @@ import multiprocessing as mp
 from Bio import SeqIO
 
 
-def seq_rename(inFile, prefix='.'):
+def seq_rename(inFile, ambig_cutoff=0, prefix='.'):
     (inFileDir, inFileName) = os.path.split(inFile)
     inFileDir = os.path.abspath(inFileDir)
     prefix = os.path.abspath(prefix)
@@ -64,8 +66,10 @@ def seq_rename(inFile, prefix='.'):
     re2 = re.compile(r'^_*(.*?)_*$')
     re3 = re.compile(r'_*complete_genome')
     re4 = re.compile(r'(.{78}).+')
+    ambig_chars = re.compile(r'[RYSWKMBVDH]')
 
     # iterating through sequence
+    ambig_cnt = 0
     with open(outFile, 'w') as outFH:
         for i,record in enumerate(SeqIO.parse(inFile, 'fasta')):
             name = record.name
@@ -77,7 +81,12 @@ def seq_rename(inFile, prefix='.'):
             name = name.lstrip('>') + '__seq{}'.format(i)
             record.id = name
             record.description = name
+            ambig_cnt += len(ambig_chars.findall(str(record.seq.upper())))
             SeqIO.write(record, outFH, 'fasta')
+
+    if ambig_cnt > int(ambig_cutoff):
+        msg = 'No. of ambig chars ({}) is > than ambig-cutoff ({})'
+        raise ValueError(msg.format(ambig_cnt, ambig_cutoff))
         
     msg = 'File written: {}\n'
     sys.stderr.write(msg.format(outFile))
@@ -96,10 +105,10 @@ def main(args):
     # rename
     if args['--debug']:
         for f in args['<genome_fasta>']:
-            seq_rename(f, prefix=args['--prefix'])
+            seq_rename(f, ambig_cutoff=args['-a'], prefix=args['--prefix'])
     else:
         p = mp.Pool(int(args['-n']))
-        seq_rename_p = partial(seq_rename, prefix=args['--prefix'])
+        seq_rename_p = partial(seq_rename, ambig_cutoff=args['-a'], prefix=args['--prefix'])
         p.map(seq_rename_p, args['<genome_fasta>'])
     
 
