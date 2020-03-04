@@ -1,5 +1,4 @@
 [![Travis-CI Build Status](https://travis-ci.org/nick-youngblut/MGSIM.svg?branch=master)](https://travis-ci.org/nick-youngblut/MGSIM)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3696891.svg)](https://doi.org/10.5281/zenodo.3696891)
 
 MGSIM
 =====
@@ -18,12 +17,10 @@ Metagenome read simulation of multiple synthetic communities
 
 # REFERENCE
 
-[[top](#sections)]
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3696891.svg)](https://doi.org/10.5281/zenodo.3696891)
 
 
 # INSTALLATION
-
-[[top](#sections)]
 
 ## Dependencies
 
@@ -78,20 +75,8 @@ See all subcommands:
 `MGSIM ht_reads -h`
 
 
-# TODO
-
-* handle taxon names that include spaces
-* include logging
-
-
-# CHANGELOG
-
-[[top](#sections)]
-
-
 # LICENSE
 
-See the `LICENSE` file
+See [LICENSE](./LICENSE)
 
-[[top](#sections)]
 
