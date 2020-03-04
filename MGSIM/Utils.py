@@ -5,6 +5,7 @@
 import os,sys
 import re
 import time
+import logging
 import platform
 import subprocess
 from pprint import pprint
@@ -17,9 +18,13 @@ import glob
 import numpy as np
 import pandas as pd
 
+# logging
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
+
 
 def get_os():
-    """Get operating system; only works for unix-like machines"""
+    """ Get operating system; only works for unix-like machines
+    """
     OS = platform.uname()[0]
     if OS == 'Linux':
         OS = 'linux'
@@ -27,15 +32,13 @@ def get_os():
         OS = 'mac'
     else:
         sys.stderr.write('OS: "{}" not supported\n'.format(OS))
-
     return OS
 
-
 def is_file(fileName):
-    """Does file exist?"""
+    """ Does file exist? with custom output message
+    """
     if os.path.isfile(fileName) is False:
         raise IOError('"{}" does not exist'.format(fileName))
-
         
 def sys_call(cmd, quiet=False):
     """System call of command.
@@ -64,9 +67,8 @@ def sys_call(cmd, quiet=False):
         pass # handle errors in the called executable
     except OSError:
         raise OSError('No executable for command: "{}"\n'.format(cmd))
-
     output, err = proc.communicate()
-
+    return output, err
 
 def checkExists(f):
     """ Check that the file `f` exists."""
@@ -74,13 +76,11 @@ def checkExists(f):
         msg = '"{}" not found. Did you provide the full PATH?'
         raise IOError(msg.format(f))
 
-
 def checkEmpty(f):
     """ Check that the file `f` is not empty"""
     if os.stat(f).st_size == 0:
         msg = '"{}" is empty!'
         raise IOError(msg.format(f))
-
 
 def parseGenomeList(inFile, filePath=None, check_exists=True):
     """Parsing the genome list file.

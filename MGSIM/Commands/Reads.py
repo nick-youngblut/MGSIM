@@ -65,11 +65,15 @@ Description:
 from docopt import docopt
 import sys,os
 import re
+import logging
 from functools import partial
 import multiprocessing as mp
 import logging
 ## application
 from MGSIM import SimReads
+## logging
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
+
 
 def main(args):
     # load tables

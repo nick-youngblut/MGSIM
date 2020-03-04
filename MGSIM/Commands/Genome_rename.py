@@ -43,10 +43,13 @@ Description:
 from docopt import docopt
 import sys,os
 import re
+import logging
 from functools import partial
 import multiprocessing as mp
 ## 3rd party
 from Bio import SeqIO
+## logging
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 
 def seq_rename(inFile, ambig_cutoff=0, prefix='.'):

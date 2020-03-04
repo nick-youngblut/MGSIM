@@ -83,6 +83,7 @@ Description:
 from docopt import docopt
 import sys,os
 import re
+import logging
 from pprint import pprint
 from shutil import rmtree
 from functools import partial
@@ -93,6 +94,8 @@ import numpy as np
 ## application
 from MGSIM import SimReads
 from MGSIM import SimHtReads
+## logging
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 
 def _flatten(list_of_lists):

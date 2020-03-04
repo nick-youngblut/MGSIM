@@ -70,9 +70,11 @@ Description:
 ## batteries
 from docopt import docopt
 import sys,os
+import logging
 ## application
 from MGSIM.SimComms import SimComms
-
+## logging
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 # functions
 def main(uargs):

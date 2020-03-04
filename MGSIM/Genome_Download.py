@@ -35,7 +35,8 @@ def main(args):
     logging.info('Downloading genomes via efetch...')
     nprocs = int(float(args['-n']))
     pool = Pool(nprocs)
-    func = partial(e_query, email=args['-e'], outdir=args['-d'], rename=args['-r'], ambig_cutoff=['-a'])
+    func = partial(e_query, email=args['-e'], outdir=args['-d'],
+                   rename=args['-r'], ambig_cutoff=['-a'])
     if args['--debug'] is True:
         acc_tbl = list(map(func, acc_tbl))
     else:
@@ -177,7 +178,8 @@ def check_genome(genome_fasta, ambig_cutoff=0):
             logging.warning(msg.format(ambig_cnt, genome_fasta))
             return(None)
         else:
-            msg = '  WARNING: no. of ambig nucleotides is {}, but ambig-cutoff is {}, so keeping genome: {}'
+            msg = '  WARNING: no. of ambig nucleotides is {}'
+            msg += ', but ambig-cutoff is {}, so keeping genome: {}'
             logging.warning(msg.format(ambig_cnt, ambig_cutoff, genome_fasta))            
 
     if len_cnt < 1000:

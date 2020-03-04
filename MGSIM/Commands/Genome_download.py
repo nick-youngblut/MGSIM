@@ -40,9 +40,13 @@ Description:
 """
 
 # import
+import sys,os
+import logging
 ## batteries
 from docopt import docopt
 from MGSIM import Genome_Download
+## logging
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 
 # opt parse

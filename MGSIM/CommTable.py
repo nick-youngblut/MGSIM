@@ -78,7 +78,6 @@ class CommTable(_table):
         else:
             return self.df[retCol].sum()
 
-
     @property
     def abs_abund(self):
         """The absolute abundance of each taxon based on user-value.
