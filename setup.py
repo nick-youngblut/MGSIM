@@ -19,7 +19,7 @@ install_reqs = [
 desc = 'Metagenome simulation of multiple synthetic communities'
 setup(
     name = 'MGSIM',
-    version = '0.1.8',
+    version = '0.1.9',
     description = desc,
     long_description = desc + '\n See README for more information.',
     author = 'Nick Youngblut',

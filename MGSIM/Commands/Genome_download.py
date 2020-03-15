@@ -15,6 +15,7 @@ Options:
   -e=<e>            Email to use for NCBI queries. [Default: blank@gmail.com]
   -a=<a>            Number of ambiguous nucleotides allowed in a genome. [Default: 0]
   -n=<n>            Number of cpus. [Default: 1]
+  -t=<t>            Number of tries to download genomes. [Default: 10]
   -r                Rename genome sequences based on taxon name?
   --debug           Debug mode (no multiprocessing).
   -h --help         Show this screen.

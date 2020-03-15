@@ -34,12 +34,13 @@ def main(args):
     # query via efetch & download
     logging.info('Downloading genomes via efetch...')
     nprocs = int(float(args['-n']))
-    pool = Pool(nprocs)
     func = partial(e_query, email=args['-e'], outdir=args['-d'],
-                   rename=args['-r'], ambig_cutoff=['-a'])
-    if args['--debug'] is True:
+                   rename=args['-r'], ambig_cutoff=int(args['-a']),
+                   tries=int(args['-t']))
+    if args['--debug'] is True or nprocs < 2:
         acc_tbl = list(map(func, acc_tbl))
     else:
+        pool = Pool(nprocs)
         acc_tbl = pool.map(func, acc_tbl)
 
     # writing out new acc_tbl to STDOUT
@@ -48,7 +49,7 @@ def main(args):
         # writing line
         print('\t'.join([str(y) for y in x]))
 
-def query_assembly(acc, genome_id, outdir, rename=False, ambig_cutoff=0):
+def query_assembly(acc, genome_id, outdir, rename=False, ambig_cutoff=0, tries=10):
     """Querying assembly db
     """
     msg = '  Trying to query the "assembly" db with accession: {}'
@@ -70,7 +71,8 @@ def query_assembly(acc, genome_id, outdir, rename=False, ambig_cutoff=0):
 
     # querying nucleotide
     acc = accs[0]
-    while 1:
+    records = None
+    for attempt in range(tries):
         try:
             genomeIds = Entrez.read(Entrez.esearch(db="nucleotide",
                                                 term=acc,
@@ -81,11 +83,20 @@ def query_assembly(acc, genome_id, outdir, rename=False, ambig_cutoff=0):
                                     rettype="fasta",
                                     retmode="text")
         except IOError:
-            msg = 'WARNING: Network error! Trying again for accession: {}'
-            logging.warning(msg.format(acc))
-            time.sleep(10)
+            msg = 'WARNING: Network error! Trying again for accession: {} (attempt {})'
+            logging.warning(msg.format(acc, attempt+1))
+            records = None
+            time.sleep(10 + attempt * 2)
             continue
-        break
+        if records is not None:
+            records = list(records)
+            if len(records) == 0 or records[0] == '' or \
+               records[0] == 'Supplied id parameter is empty.':
+                records = None
+            else:
+                break
+    if records is None:
+        sys.exit('Could not download accession: {}'.format(acc))
         
     # writing out file (renaming sequence headers if needed)
     if rename:
@@ -93,15 +104,14 @@ def query_assembly(acc, genome_id, outdir, rename=False, ambig_cutoff=0):
     else:
         out_file = os.path.join(outdir, genome_id + '.fna')
     with open(out_file, 'w') as outF:
-        outF.write(''.join([x for x in records]) + '\n')
-    records.close()
+        outF.write(''.join(records) + '\n')
 
     # checking genome fasta
     out_file = check_genome(out_file, ambig_cutoff)
     
     return out_file
         
-def e_query(x, email, outdir, rename=False, ambig_cutoff=0):
+def e_query(x, email, outdir, rename=False, ambig_cutoff=0, tries=10):
     """Efetch query for one genome
     x : [taxon, accession]
     """
@@ -120,27 +130,36 @@ def e_query(x, email, outdir, rename=False, ambig_cutoff=0):
     ## query nucleotide db
     logging.info('  Querying "nucleotide" db with accession: {}'.format(acc))
     search = acc + '[Accession]'
-    while 1:
+    records = None
+    for attempt in range(tries):
         try:
             genomeIds = Entrez.read(Entrez.esearch(db="nucleotide",
-                                                term=acc,
-                                                retmode="xml",
-                                                retmax=1))['IdList']
+                                                   term=acc,
+                                                   retmode="xml",
+                                                   retmax=1))['IdList']
             records = Entrez.efetch(db="nucleotide",
                                     id=genomeIds,
                                     rettype="fasta",
                                     retmode="text")
         except IOError:
-            msg = 'WARNING: Network error! Trying again for accession: {}'
-            logging.warning(msg.format(acc))
-            time.sleep(10)
+            msg = 'WARNING: Network error! Trying again for accession: {} (attempt {})'
+            logging.warning(msg.format(acc, attempt+1))
+            records = None
+            time.sleep(10 + attempt * 2)
             continue
-        break
+        if records is not None:
+            records = list(records)
+            if len(records) == 0 or records[0] == '' or \
+               records[0] == 'Supplied id parameter is empty.':
+                records = None
+            else:
+                break
+    if records is None:
+        sys.exit('Could not download accession: {}'.format(acc))
         
     # writing out file (renaming sequence headers if needed)
     with open(out_file, 'w') as outF:
-        outF.write(''.join([x for x in records]) + '\n')
-    records.close()
+        outF.write(''.join(records) + '\n')
 
     # checking that genome is formatted correctly formatted (and complete)
     out_file = check_genome(out_file, ambig_cutoff)
