@@ -30,6 +30,37 @@ def test_barcode_gen():
 def test_help(script_runner):
     ret = script_runner.run('MGSIM', 'ht_reads', '-h')
     assert ret.success
+
+def test_main(script_runner):
+    genome_table = os.path.join(data_dir, 'genome_list.txt')
+    abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
+    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    output_prefix = os.path.join(data_dir, 'TEST')
+    
+    ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
+                            '--tmp-dir', temp_dir,
+                            '--barcode-total', '20',
+                            '--barcode-chunks', '2',
+                            '--seq-depth', '1e3',
+                            '--rndSeed', '8294',
+                            genome_table, abund_table, output_prefix)
+    assert ret.success
+
+def test_main_multi(script_runner):
+    genome_table = os.path.join(data_dir, 'genome_list.txt')
+    abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
+    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    output_prefix = os.path.join(data_dir, 'TEST')
+    
+    ret = script_runner.run('MGSIM', 'ht_reads',
+                            '--art-paired', '-n', '2',
+                            '--tmp-dir', temp_dir,
+                            '--seq-depth', '1e4',
+                            '--rndSeed', '8294',
+                            genome_table, abund_table, output_prefix)
+    assert ret.success
+
+    
     
 # def test_main():
 #     genome_table = os.path.join(data_dir, 'genome_list.txt')

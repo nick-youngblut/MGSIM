@@ -1,3 +1,5 @@
+![MGSIM](https://github.com/nick-youngblut/MGSIM/workflows/MGSIM/badge.svg)
+
 MGSIM
 =====
 
