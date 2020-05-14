@@ -27,30 +27,33 @@ def test_barcode_gen():
     assert len(barcodes) == n_barcodes
     assert type(barcodes) is np.ndarray
 
+def test_help():
+    ret = script_runner.run('MGSIM', 'ht_reads', '-h')
+    assert ret.success
+    
+# def test_main():
+#     genome_table = os.path.join(data_dir, 'genome_list.txt')
+#     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
+#     temp_dir = os.path.join(data_dir, 'temp_read_files')
+#     output_prefix = os.path.join(data_dir, 'TEST')
+#     args = ['--art-paired',
+#             '--tmp-dir', temp_dir,
+#             '--barcode-total', 20,
+#             '--barcode-chunks', 2,
+#             '--seq-depth', 1e3,
+#             '--rndSeed', 8294,
+#             genome_table, abund_table, output_prefix]
+#     HtReads_CMD.opt_parse(args)
 
-def test_main():
-    genome_table = os.path.join(data_dir, 'genome_list.txt')
-    abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
-    output_prefix = os.path.join(data_dir, 'TEST')
-    args = ['--art-paired',
-            '--tmp-dir', temp_dir,
-            '--barcode-total', 20,
-            '--barcode-chunks', 2,
-            '--seq-depth', 1e3,
-            '--rndSeed', 8294,
-            genome_table, abund_table, output_prefix]
-    HtReads_CMD.opt_parse(args)
 
-
-def test_main_multi():
-    genome_table = os.path.join(data_dir, 'genome_list.txt')
-    abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
-    output_prefix = os.path.join(data_dir, 'TEST')
-    args = ['-n', 4,
-            '--art-paired',
-            '--tmp-dir', temp_dir,
-            '--seq-depth', 1e4, 
-            genome_table, abund_table, output_prefix]
-    HtReads_CMD.opt_parse(args)
+# def test_main_multi():
+#     genome_table = os.path.join(data_dir, 'genome_list.txt')
+#     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
+#     temp_dir = os.path.join(data_dir, 'temp_read_files')
+#     output_prefix = os.path.join(data_dir, 'TEST')
+#     args = ['-n', 4,
+#             '--art-paired',
+#             '--tmp-dir', temp_dir,
+#             '--seq-depth', 1e4, 
+#             genome_table, abund_table, output_prefix]
+#     HtReads_CMD.opt_parse(args)
