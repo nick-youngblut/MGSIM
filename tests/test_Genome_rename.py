@@ -17,7 +17,7 @@ data_dir = os.path.join(test_dir, 'data')
 
 
 # tests
-def test_help():
+def test_help(script_runner):
     ret = script_runner.run('MGSIM', 'genome_rename', '-h')
     assert ret.success
 

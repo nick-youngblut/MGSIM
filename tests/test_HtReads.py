@@ -27,7 +27,7 @@ def test_barcode_gen():
     assert len(barcodes) == n_barcodes
     assert type(barcodes) is np.ndarray
 
-def test_help():
+def test_help(script_runner):
     ret = script_runner.run('MGSIM', 'ht_reads', '-h')
     assert ret.success
     
