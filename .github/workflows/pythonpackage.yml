@@ -38,4 +38,4 @@ jobs:
       shell: bash -l {0}
       run: |
         pytest -s --script-launch-mode=subprocess
-	MGSIM -h
+        MGSIM -h
