@@ -35,7 +35,7 @@ def test_main_ncomm1(script_runner):
     output_prefix = os.path.join(data_dir, 'comm')
     ret = script_runner.run('MGSIM', 'communities',
                             genomeList, output_prefix,
-                            '--n-comm', '1', '--richness', 1)
+                            '--n-comm', '1', '--richness', '1')
     assert ret.success
 
     
