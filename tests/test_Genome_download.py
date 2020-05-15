@@ -34,7 +34,7 @@ def test_main_rename(script_runner):
     assert ret.success
 
 def test_main_badAcc(script_runner):
-    acc_tbl = os.path.join(data_dir, 'genome_download_bacAcc.tsv')
+    acc_tbl = os.path.join(data_dir, 'genome_download_badAcc.tsv')
     ret = script_runner.run('MGSIM', 'genome_download',
                             '--debug', '-r', '-d', data_dir, acc_tbl)
     assert ret.success
@@ -43,7 +43,7 @@ def test_main_dupTaxa(script_runner):
     acc_tbl = os.path.join(data_dir, 'genome_download_dupTaxa.tsv')
     ret = script_runner.run('MGSIM', 'genome_download',
                             '--debug', '-r', '-d', data_dir, acc_tbl)
-    assert ret.success
+    assert not ret.success
     
 # def test_cmd():
 #     acc_tbl = os.path.join(data_dir, 'genome_download.tsv')
