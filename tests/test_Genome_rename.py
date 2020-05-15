@@ -44,23 +44,3 @@ def test_main_ambig(script_runner):
                             *fasta_files)
     assert not ret.success
 
-    
-# def test_cmd():
-#     fasta_files = ['Escherichia_coli_K-12_MG1655.fna',
-#                    'Clostridium_perfringens_ATCC_13124.fna']
-#     fasta_files = [os.path.join(data_dir, x) for x in fasta_files]
-#     prefix = os.path.join(data_dir, 'renamed')
-#     if not os.path.isdir(prefix):
-#         os.mkdir(prefix)
-#     args = ['--debug', '--prefix', prefix] + fasta_files
-#     Genome_rename_CMD.opt_parse(args)
-
-#def test_cmd_ambig():
-#    fasta_files = ['Escherichia_coli_K-12_MG1655_ambig.fna']
-#    fasta_files = [os.path.join(data_dir, x) for x in fasta_files]
-#    prefix = os.path.join(data_dir, 'renamed')
-#    if not os.path.isdir(prefix):
-#        os.mkdir(prefix)
-#    args = ['--debug', '--prefix', prefix] + fasta_files
-#    with pytest.raises(ValueError):
-#        Genome_rename_CMD.opt_parse(args)

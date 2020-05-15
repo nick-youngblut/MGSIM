@@ -44,24 +44,3 @@ def test_main_dupTaxa(script_runner):
     ret = script_runner.run('MGSIM', 'genome_download',
                             '--debug', '-r', '-d', data_dir, acc_tbl)
     assert not ret.success
-    
-# def test_cmd():
-#     acc_tbl = os.path.join(data_dir, 'genome_download.tsv')
-#     args = ['-d', data_dir, acc_tbl, '--debug']
-#     Genome_download_CMD.opt_parse(args)
-
-# def test_cmd_rename():
-#     acc_tbl = os.path.join(data_dir, 'genome_download.tsv')
-#     args = ['-d', data_dir, acc_tbl, '--debug', '-r']
-#     Genome_download_CMD.opt_parse(args)
-
-# def test_cmd_badAcc():
-#     acc_tbl = os.path.join(data_dir, 'genome_download_badAcc.tsv')
-#     args = ['-d', data_dir, acc_tbl, '--debug', '-r']
-#     Genome_download_CMD.opt_parse(args)
-
-# def test_cmd_dupTaxa():
-#     acc_tbl = os.path.join(data_dir, 'genome_download_dupTaxa.tsv')
-#     args = ['-d', data_dir, acc_tbl, '--debug', '-r']
-#     with pytest.raises(ValueError):
-#         Genome_download_CMD.opt_parse(args)
