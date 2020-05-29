@@ -47,7 +47,7 @@ def bin_barcodes(barcodes, binsize=1000):
                        np.arange(0,barcodes.shape[0],binsize))
     return [barcodes[bins == x] for x in np.unique(bins)]
 
-def sim_barcode_reads(barcodes, genome_table, abund_table, args, rndSeed=None):
+def sim_barcode_reads(barcodes, genome_table, abund_table, tmp_dir, args, rndSeed=None):
     """Simulate reads for each fragment associated with each barcode
     Parameters
     ----------
@@ -84,7 +84,7 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, args, rndSeed=None):
                          frag_size_max=int(args['--frag-size-max']))
 
         # parsing fragments
-        func = partial(parse_frags, barcode=barcode, out_dir=args['--tmp-dir'])
+        func = partial(parse_frags, barcode=barcode, out_dir=tmp_dir)
         frag_files = [func(refs.loc[refs['Taxon'] == taxon]) for taxon in refs['Taxon'].unique()]
         
         # simulating reads

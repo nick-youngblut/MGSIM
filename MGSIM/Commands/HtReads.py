@@ -149,17 +149,14 @@ def main(args):
     exe = 'art_illumina'
     if find_executable(exe) == '':
         raise IOError('Cannot find executable: {}'.format(exe))
-    ## temp dir
-    if not os.path.isdir(args['--tmp-dir']):
-        os.makedirs(args['--tmp-dir'])
     
     # load tables
     ## table mapping taxa to genomes
     genome_table = SimReads.load_genome_table(args['<genome_table>'])
     ## table of taxon relative abundances
     abund_table = SimReads.load_abund_table(args['<abund_table>'])
-    x = abund_table.Community[0]
-    abund_table = abund_table.loc[abund_table.Community == x,]
+    #x = abund_table.Community[0]
+    #abund_table = abund_table.loc[abund_table.Community == x,]
 
     # Sim Params
     ## random seed
@@ -167,6 +164,24 @@ def main(args):
         rndSeed = None
     else:
         rndSeed = int(args['--rndSeed'])
+
+    # simulating per community
+    comms = abund_table.Community.unique()
+    for comm in comms:
+        comm_tbl = abund_table.loc[abund_table.Community == comm,]
+        sim_per_community(args, comm_id = comm,
+                          abund_table = comm_tbl,
+                          genome_table = genome_table,
+                          rndSeed = rndSeed)
+
+
+def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
+    # I/O
+    outdir = os.path.join(args['<output_dir>'], str(comm_id))
+    ## temp dir
+    tmp_dir = os.path.join(args['--tmp-dir'], str(comm_id))
+    if not os.path.isdir(tmp_dir):
+        os.makedirs(tmp_dir)
     
     ## batching by barcodes
     ### creating barcode ID array
@@ -175,7 +190,8 @@ def main(args):
     ### simulating barcodes
     func = partial(SimHtReads.sim_barcode_reads,
                    genome_table=genome_table,
-                   abund_table=abund_table,                   
+                   abund_table=abund_table,
+                   tmp_dir=tmp_dir,
                    args=args,
                    rndSeed=rndSeed)
     barcodes = SimHtReads.bin_barcodes(barcodes,args['--barcode-chunks'])
@@ -187,13 +203,12 @@ def main(args):
     # flatten batched output
     (fq_files,tsv_files) = flatten(files)
     # combining all frag tsv
-    SimHtReads.combine_frag_tsv(tsv_files, args['<output_dir>'])
+    SimHtReads.combine_frag_tsv(tsv_files, outdir)
     # combining all reads
-    SimHtReads.combine_reads(fq_files, args['<output_dir>'])
+    SimHtReads.combine_reads(fq_files, outdir)
     # removing temp directory
     if args['--debug'] is False:
         rmtree(args['--tmp-dir'])
-
         
 def opt_parse(args=None):
     if args is None:        

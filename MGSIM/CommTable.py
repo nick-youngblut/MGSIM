@@ -77,7 +77,7 @@ class CommTable(_table):
             return self.df.loc[self.df['library'] == libID][retCol].sum()
         else:
             return self.df[retCol].sum()
-
+        
     @property
     def abs_abund(self):
         """The absolute abundance of each taxon based on user-value.
