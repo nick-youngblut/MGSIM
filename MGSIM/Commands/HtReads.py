@@ -20,15 +20,15 @@ Options:
                           [Default: 1e5]
   --frag-size-mean=<fsm>  Mean fragment size of input gDNA (bp)
                           [Default: 10000]
-  --frag-size-sp=<fss>    Fragment size spread of input gDNA (bp)
-                          [Default: 10000]
+  --frag-size-sd=<fss>    Fragment size standard deviation of input gDNA (bp)
+                          [Default: 1000]
   --frag-size-min=<fsa>   Min fragment size of input gDNA (bp)
                           [Default: 8000]
   --frag-size-max=<fsa>   Min fragment size of input gDNA (bp)
                           [Default: 20000]
   --frag-bc-mean=<fbm>    Mean fragment-to-barcode count
                           [Default: 5]
-  --frag-bc-sd=<fbs>      Stdev fragment-to-barcode count
+  --frag-bc-sd=<fbs>      Standard deviation of fragment-to-barcode count
                           [Default: 1]
   --art-paired            art_illumina "paired"  parameter.
   --art-len=<al>          art_illumina "len" parameter.

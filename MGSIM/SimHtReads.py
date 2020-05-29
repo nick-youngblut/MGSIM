@@ -79,7 +79,7 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, args, rndSeed=None):
         # sim fragment sizes
         refs = sim_frags(refs, n_frags,
                          frag_size_loc=float(args['--frag-size-mean']),
-                         frag_size_scale=float(args['--frag-size-sp']),
+                         frag_size_sd=float(args['--frag-size-sd']),
                          frag_size_min=int(args['--frag-size-min']),
                          frag_size_max=int(args['--frag-size-max']))
 
@@ -299,7 +299,7 @@ def select_refs(n_frags, genome_table):
                             p=probs)
     return genome_table.loc[refs]
     
-def sim_frags(refs, n_frags, frag_size_loc, frag_size_scale,
+def sim_frags(refs, n_frags, frag_size_loc, frag_size_sd,
               frag_size_min, frag_size_max):
     """Simulating fragment sizes
     Parameters
@@ -310,19 +310,19 @@ def sim_frags(refs, n_frags, frag_size_loc, frag_size_scale,
         Number of fragments
     frag_size_loc : float
         Mean fragment size
-    frag_size_scale : float
+    frag_size_sd : float
         Stdev fragment size
     frag_size_min : float
         Min fragmen size (trun-norm distribution)
     frag_size_max : float
         Max fragmen size (trun-norm distribution)
     """
-    a = (frag_size_min - frag_size_loc) / frag_size_scale  # fraction of range smaller than loc
-    b = (frag_size_max - frag_size_loc) / frag_size_scale  # fraction of range greater than loc
+    a = (frag_size_min - frag_size_loc) / frag_size_sd  # fraction of range smaller than loc
+    b = (frag_size_max - frag_size_loc) / frag_size_sd  # fraction of range greater than loc
     refs.loc[:,'Frag_size'] = truncnorm.rvs(a, b,
                                             size=n_frags,
                                             loc=frag_size_loc,
-                                            scale=frag_size_scale)
+                                            scale=frag_size_sd)
     return refs
     
 def parse_frags(refs, barcode, out_dir):
