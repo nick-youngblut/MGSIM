@@ -24,16 +24,17 @@ Metagenome read simulation of multiple synthetic communities
 
 ## Dependencies
 
-See the `.travis.yml` file for setup info.
+See the `conda install` line in the [CI yaml](.github/workflows/pythonpackage.yml)
 
 ## Install
 
-It is best to used a conda environment, but you can just run the following:
+### via pip
+
+`pip install MGSIM`
+
+### via `setup.py`
 
 `python setpy.py install`
-
-> In theory, dependencies that are NOT found in your conda
-environment will be downloaded during the `setup.py install`
 
 ## Testing
 
