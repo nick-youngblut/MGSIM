@@ -238,7 +238,8 @@ def combine_frag_tsv(tsv_files, output_dir, debug=False):
             
     logging.info('File written: {}'.format(out_file))
 
-def combine_reads(fq_files, output_dir, debug=False):
+def combine_reads(fq_files, output_dir, name_fmt='{readID} BX:Z:{barcodeID}',
+                  debug=False):
     """ Concat all read files
     Parameters
     ----------
@@ -246,6 +247,8 @@ def combine_reads(fq_files, output_dir, debug=False):
         Iterable of fastq read files
     output_dir : str
         Final output directory for read files
+    name_fmt : str
+        How to format the read name. "{readID} BX:Z:{barcodeID}" will generate names such as "@ST-J00101:121:HYCGGBBXX:5:1101:30533:1191 BX:Z:A58B91C07D86"
     debug : bool
         Debug mode
     """    
@@ -260,28 +263,38 @@ def combine_reads(fq_files, output_dir, debug=False):
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
     ## read1
-    R1_files = _combine_reads(R1_files, output_dir, 'R1.fq')
+    R1_files = _combine_reads(R1_files, output_dir, 'R1.fq', name_fmt)
     ## read2
     if R2_files is not None:
-        R2_files = _combine_reads(R2_files, output_dir, 'R2.fq')
+        R2_files = _combine_reads(R2_files, output_dir, 'R2.fq', name_fmt)
 
-def _combine_reads(read_files, out_dir, out_file):
+def _combine_reads(read_files, out_dir, out_file, name_fmt):
     """Combining temporary read files.
-    (eg., @ST-J00101:121:HYCGGBBXX:5:1101:30533:1191 BX:Z:A58B91C07D86).
+    eg., @ST-J00101:121:HYCGGBBXX:5:1101:30533:1191 BX:Z:A58B91C07D86
 
     """
-    #template = '@ST-J00101:136:FC706VJ:1:1:{}:{} BX:Z:{}'
     out_file = os.path.join(out_dir, out_file)
     with open(out_file, 'w') as outF:
         for i,F in enumerate(read_files):
             with open(F, 'r') as inF:
+                seq_len = 0
+                qual_len = 0
                 for ii,line in enumerate(inF):
-                    if ii % 4 == 0:
+                    if ii % 4 == 0:   # read header
                         line = line.split('-')
-                        outF.write('{} BX:Z:{}\n'.format(line[0],
-                                                         line[1]))
-                    else:
-                        outF.write(line)
+                        X = name_fmt.format(readID=line[0], barcodeID=line[1])
+                        outF.write(X + '\n')
+                        seq_len = 0
+                        qual_len = 0
+                        continue
+                    elif ii % 4 == 1:  # read sequence
+                        seq_len = len(line.rstrip())
+                    elif ii % 4 == 3:  # read quality
+                        qual_len = len(line.rstrip())
+                        if seq_len != qual_len:
+                            msg = 'Line {} in file {}: read-len != qual-len'
+                            raise ValueError(msg.format(ii, F))
+                    outF.write(line)
                         
     logging.info('File written: {}'.format(out_file))
         

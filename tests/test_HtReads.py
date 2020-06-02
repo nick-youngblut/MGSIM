@@ -60,3 +60,34 @@ def test_main_multi(script_runner):
                             genome_table, abund_table, output_prefix)
     assert ret.success
 
+def test_main_prefix(script_runner):
+    genome_table = os.path.join(data_dir, 'genome_list.txt')
+    abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
+    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    output_prefix = os.path.join(data_dir, 'TEST')
+    
+    ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
+                            '--tmp-dir', temp_dir,
+                            '--barcode-total', '20',
+                            '--barcode-chunks', '2',
+                            '--seq-depth', '1e3',
+                            '--read-name', '"{readID}_BX:Z:{barcodeID}"',
+                            '--rndSeed', '8294',
+                            genome_table, abund_table, output_prefix)
+    assert ret.success
+
+def test_main_large_frag_sd(script_runner):
+    genome_table = os.path.join(data_dir, 'genome_list.txt')
+    abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
+    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    output_prefix = os.path.join(data_dir, 'TEST')
+    
+    ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
+                            '--tmp-dir', temp_dir,
+                            '--frag-size-mean', '10000',
+                            '--frag-size-sd', '9000',
+                            '--barcode-total', '20',
+                            '--barcode-chunks', '2',
+                            '--seq-depth', '5e3',
+                            genome_table, abund_table, output_prefix)
+    assert ret.success

@@ -44,6 +44,8 @@ Options:
                           [Default: None]
   --tmp-dir=<td>          Temporary directory. 
                           [Default: .sim_reads]
+  --read-name=<bft>       Read name format
+                          [Default: {readID} BX:Z:{barcodeID}]
   -n=<n>                  Number of cpus. 
                           [Default: 1]
   --debug                 Debug mode (no subprocesses verbose output).
@@ -155,8 +157,6 @@ def main(args):
     genome_table = SimReads.load_genome_table(args['<genome_table>'])
     ## table of taxon relative abundances
     abund_table = SimReads.load_abund_table(args['<abund_table>'])
-    #x = abund_table.Community[0]
-    #abund_table = abund_table.loc[abund_table.Community == x,]
 
     # Sim Params
     ## random seed
@@ -168,6 +168,7 @@ def main(args):
     # simulating per community
     comms = abund_table.Community.unique()
     for comm in comms:
+        logging.info('Simulating reads for community: {}'.format(comm))
         comm_tbl = abund_table.loc[abund_table.Community == comm,]
         sim_per_community(args, comm_id = comm,
                           abund_table = comm_tbl,
@@ -205,7 +206,7 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
     # combining all frag tsv
     SimHtReads.combine_frag_tsv(tsv_files, outdir)
     # combining all reads
-    SimHtReads.combine_reads(fq_files, outdir)
+    SimHtReads.combine_reads(fq_files, outdir, name_fmt=args['--read-name'])
     # removing temp directory
     if args['--debug'] is False:
         rmtree(args['--tmp-dir'])
