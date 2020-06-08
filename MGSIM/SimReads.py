@@ -172,7 +172,6 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
                    fq_files=fq_files,
                    temp_dir=temp_dir,
                    file_prefix='illumina',
-                   seq_depth=seq_depth,
                    output_dir=output_dir,
                    debug=debug)
     if debug is True:
