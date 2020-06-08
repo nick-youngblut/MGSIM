@@ -13,9 +13,9 @@ Options:
   <abund_table>           Taxon abundance info.
   <output_dir>            Output directory.
   --barcode-total=<bt>    Number of barcodes 
-                          [Default: 1e2]
+                          [Default: 1e3]
   --barcode-chunks=<bc>   Chunk size for parallel processing of barcodes
-                          [Default: 1e1]
+                          [Default: 10]
   --seq-depth=<d>         Number of (paired) Illumina reads per sample.
                           [Default: 1e5]
   --frag-size-mean=<fsm>  Mean fragment size of input gDNA (bp)
@@ -77,7 +77,7 @@ Description:
   * tsv file of simulated genome fragments
     * These fragments were used as reference for read simulation
   * Read1 fastq [& Read2 fastq]
-    * read header naming: <fragment UUID> BX:Z:<barcode_ID>
+    * Default read header naming: <fragment UUID> BX:Z:<barcode_ID>
 """
 
 # import
@@ -206,7 +206,8 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
     # combining all frag tsv
     SimHtReads.combine_frag_tsv(tsv_files, outdir)
     # combining all reads
-    SimHtReads.combine_reads(fq_files, outdir, name_fmt=args['--read-name'])
+    SimHtReads.combine_reads(fq_files, outdir, name_fmt=args['--read-name'],
+                             seq_depth=int(float(args['--seq-depth'])))
     # removing temp directory
     if args['--debug'] is False:
         rmtree(args['--tmp-dir'])

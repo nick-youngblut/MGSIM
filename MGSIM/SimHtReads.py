@@ -239,7 +239,7 @@ def combine_frag_tsv(tsv_files, output_dir, debug=False):
     logging.info('File written: {}'.format(out_file))
 
 def combine_reads(fq_files, output_dir, name_fmt='{readID} BX:Z:{barcodeID}',
-                  debug=False):
+                  seq_depth=None, debug=False):
     """ Concat all read files
     Parameters
     ----------
@@ -263,24 +263,32 @@ def combine_reads(fq_files, output_dir, name_fmt='{readID} BX:Z:{barcodeID}',
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
     ## read1
-    R1_files = _combine_reads(R1_files, output_dir, 'R1.fq', name_fmt)
+    R1_files = _combine_reads(R1_files, output_dir, 'R1.fq', name_fmt, seq_depth)
     ## read2
     if R2_files is not None:
-        R2_files = _combine_reads(R2_files, output_dir, 'R2.fq', name_fmt)
+        R2_files = _combine_reads(R2_files, output_dir, 'R2.fq', name_fmt, seq_depth)
 
-def _combine_reads(read_files, out_dir, out_file, name_fmt):
+def _combine_reads(read_files, out_dir, out_file, name_fmt, seq_depth=None):
     """Combining temporary read files.
     eg., @ST-J00101:121:HYCGGBBXX:5:1101:30533:1191 BX:Z:A58B91C07D86
 
     """
+    if seq_depth is not None:
+        cnt = 0
     out_file = os.path.join(out_dir, out_file)
     with open(out_file, 'w') as outF:
         for i,F in enumerate(read_files):
+            if seq_depth is not None and cnt > seq_depth:
+                break
             with open(F, 'r') as inF:
                 seq_len = 0
                 qual_len = 0
                 for ii,line in enumerate(inF):
                     if ii % 4 == 0:   # read header
+                        if seq_depth is not None:
+                            cnt += 1
+                            if cnt > seq_depth:
+                                break
                         line = line.split('-')
                         X = name_fmt.format(readID=line[0], barcodeID=line[1])
                         outF.write(X + '\n')
