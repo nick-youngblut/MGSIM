@@ -268,6 +268,11 @@ def combine_reads(fq_files, output_dir, name_fmt='{readID} BX:Z:{barcodeID}',
     if R2_files is not None:
         R2_files = _combine_reads(R2_files, output_dir, 'R2.fq', name_fmt, seq_depth)
 
+def fix_nucs(seq):
+    ambig = {'A', 'T', 'G', 'C'}
+    seq = ['N' if x not in ambig else x for x in seq]
+    return ''.join(seq)
+        
 def _combine_reads(read_files, out_dir, out_file, name_fmt, seq_depth=None):
     """Combining temporary read files.
     eg., @ST-J00101:121:HYCGGBBXX:5:1101:30533:1191 BX:Z:A58B91C07D86
@@ -297,6 +302,7 @@ def _combine_reads(read_files, out_dir, out_file, name_fmt, seq_depth=None):
                         continue
                     elif ii % 4 == 1:  # read sequence
                         seq_len = len(line.rstrip())
+                        line = fix_nucs(line)
                     elif ii % 4 == 3:  # read quality
                         qual_len = len(line.rstrip())
                         if seq_len != qual_len:
