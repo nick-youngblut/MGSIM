@@ -21,7 +21,6 @@ import pandas as pd
 # logging
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
-
 def get_os():
     """ Get operating system; only works for unix-like machines
     """

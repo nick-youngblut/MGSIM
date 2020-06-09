@@ -26,7 +26,7 @@ jobs:
       run: |
         pwd
         conda info -a
-        conda install python=${{ matrix.python-version }} numpy pandas docopt scipy biopython art pyfasta
+        conda install python=${{ matrix.python-version }} numpy pandas docopt scipy biopython art pyfasta fqtools
     - uses: actions/checkout@v2	
     - name: package install
       shell: bash -l {0}

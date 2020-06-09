@@ -5,6 +5,7 @@ from __future__ import print_function
 import os
 import sys
 import pytest
+import subprocess
 ## 3rd party
 import numpy as np
 import pandas as pd
@@ -17,6 +18,15 @@ from MGSIM.Commands import HtReads as HtReads_CMD
 test_dir = os.path.join(os.path.dirname(__file__))
 data_dir = os.path.join(test_dir, 'data')
 
+
+def validate_fastq(data_dir):
+    # validating fastq
+    output_R = os.path.join(data_dir, 'TEST', '1', 'R1.fq')
+    ret = subprocess.run(['fqtools', 'validate', output_R])
+    assert ret.returncode == 0
+    output_R = os.path.join(data_dir, 'TEST', '1', 'R2.fq')
+    ret = subprocess.run(['fqtools', 'validate', output_R])
+    assert ret.returncode == 0
 
 # tests
 def test_barcode_gen():
@@ -45,6 +55,7 @@ def test_main(script_runner):
                             '--rndSeed', '8294',
                             genome_table, abund_table, output_prefix)
     assert ret.success
+    validate_fastq(data_dir)
 
 def test_main_multi(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
@@ -59,6 +70,7 @@ def test_main_multi(script_runner):
                             '--rndSeed', '8294',
                             genome_table, abund_table, output_prefix)
     assert ret.success
+    validate_fastq(data_dir)
 
 def test_main_prefix(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
@@ -71,10 +83,11 @@ def test_main_prefix(script_runner):
                             '--barcode-total', '20',
                             '--barcode-chunks', '2',
                             '--seq-depth', '1e3',
-                            '--read-name', '"{readID}_BX:Z:{barcodeID}"',
+                            '--read-name', '{readID}_BX:Z:{barcodeID}',
                             '--rndSeed', '8294',
                             genome_table, abund_table, output_prefix)
     assert ret.success
+    validate_fastq(data_dir)
 
 def test_main_large_frag_sd(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
@@ -91,3 +104,4 @@ def test_main_large_frag_sd(script_runner):
                             '--seq-depth', '5e3',
                             genome_table, abund_table, output_prefix)
     assert ret.success
+    validate_fastq(data_dir)     

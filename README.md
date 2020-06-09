@@ -45,11 +45,11 @@ run all of the tests.
 
 To run tests on a particular test file:
 
-`pytest -s path/to/the/test/file`
+`pytest -s --script-launch-mode=subprocess  path/to/the/test/file`
 
 Example:
 
-`pytest -s ./tests/test_Genome_download.py`
+`pytest -s --script-launch-mode=subprocess ./tests/test_Reads.py`
 
 # HOW-TO
 
