@@ -59,9 +59,14 @@ def query_assembly(acc, genome_id, outdir, rename=False, ambig_cutoff=0, tries=1
     record = Entrez.read(Entrez.esearch(db="assembly", term=acc))
     accs = []
     for ID in record['IdList']:
-        rec = Entrez.read(Entrez.esummary(db="assembly", id=ID, report="full"))
+        rec = Entrez.read(Entrez.esummary(db="assembly", id=ID, report="full"), validate=False)
         accession_id = rec['DocumentSummarySet']['DocumentSummary'][0]['AssemblyAccession']
-        refseq_id = Entrez.read(Entrez.esearch(db="nucleotide", term=accession_id))['IdList'][0]
+        for attempt in range(tries):
+            try:
+                refseq_id = Entrez.read(Entrez.esearch(db="nucleotide", term=accession_id), validate=False)['IdList'][0]
+                break
+            except urllib.error.HTTPError:
+                time.sleep(attempt+1)
         accs.append(refseq_id)
     if len(accs) < 1:
         return None
@@ -75,9 +80,9 @@ def query_assembly(acc, genome_id, outdir, rename=False, ambig_cutoff=0, tries=1
     for attempt in range(tries):
         try:
             genomeIds = Entrez.read(Entrez.esearch(db="nucleotide",
-                                                term=acc,
-                                                retmode="xml",
-                                                retmax=1))['IdList']
+                                                   term=acc,
+                                                   retmode="xml",
+                                                   retmax=1), validate=False)['IdList']
             records = Entrez.efetch(db="nucleotide",
                                     id=genomeIds,
                                     rettype="fasta",
