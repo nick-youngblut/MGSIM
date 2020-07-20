@@ -9,6 +9,8 @@ import time
 import uuid
 import logging
 import tempfile
+import urllib
+from urllib.error import HTTPError
 from functools import partial
 ## 3rd party
 from multiprocessing import Pool
@@ -65,7 +67,8 @@ def query_assembly(acc, genome_id, outdir, rename=False, ambig_cutoff=0, tries=1
             try:
                 refseq_id = Entrez.read(Entrez.esearch(db="nucleotide", term=accession_id), validate=False)['IdList'][0]
                 break
-            except urllib.error.HTTPError:
+            except HTTPError as e:
+                logging.info('HTTPError! Error code: {}. Retrying...'.format(e.code))
                 time.sleep(attempt+1)
         accs.append(refseq_id)
     if len(accs) < 1:
