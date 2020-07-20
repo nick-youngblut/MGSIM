@@ -69,7 +69,7 @@ def query_assembly(acc, genome_id, outdir, rename=False, ambig_cutoff=0, tries=1
                 break
             except HTTPError as e:
                 logging.info('HTTPError! Error code: {}. Retrying...'.format(e.code))
-                time.sleep(attempt+1)
+                time.sleep((attempt + 1) ** 2 + 1)
         accs.append(refseq_id)
     if len(accs) < 1:
         return None
