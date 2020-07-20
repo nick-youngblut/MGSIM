@@ -390,7 +390,7 @@ def parse_frags(refs, barcode, out_dir):
                 if contig_len >= frag_size:
                     frag_uuid = str(uuid.uuid4()).replace('-', '')
                     frag_max_end = contig_len - frag_size
-                    assert frag_max_end >= 0
+                    frag_max_end = 1 if frag_max_end < 1 else frag_max_end
                     frag_start = np.random.randint(0, frag_max_end)
                     frag_end = frag_start + frag_size
                     ## writing sequence
