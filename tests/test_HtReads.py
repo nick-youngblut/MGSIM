@@ -72,6 +72,22 @@ def test_main_multi(script_runner):
     assert ret.success
     validate_fastq(data_dir)
 
+def test_main_zeros(script_runner):
+    genome_table = os.path.join(data_dir, 'genome_list.txt')
+    abund_table = os.path.join(data_dir, 'comm_wAbund_zeros.txt')
+    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    output_prefix = os.path.join(data_dir, 'TEST')
+    
+    ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
+                            '--tmp-dir', temp_dir,
+                            '--barcode-total', '20',
+                            '--barcode-chunks', '2',
+                            '--seq-depth', '1e3',
+                            '--rndSeed', '8294',
+                            genome_table, abund_table, output_prefix)
+    assert ret.success
+    validate_fastq(data_dir)
+    
 def test_main_prefix(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
