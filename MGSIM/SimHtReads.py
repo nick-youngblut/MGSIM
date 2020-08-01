@@ -18,8 +18,9 @@ from distutils.spawn import find_executable
 ## 3rd party
 import numpy as np
 import pandas as pd
+import pyfastx
 from Bio import SeqIO
-from pyfaidx import Fasta
+#from pyfaidx import Fasta
 from scipy.stats import truncnorm
 ## application
 from MGSIM import Utils
@@ -68,7 +69,6 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, tmp_dir, args, rndSee
     frag_tsv_files = []
     read_fq_files = []
     for barcode in barcodes:
-        #logging.info('barcode: {}'.format(barcode))
         # number of fragments
         n_frags = np.random.normal(loc=float(args['--frag-bc-mean']),
                                    scale=float(args['--frag-bc-sd']))
@@ -90,7 +90,6 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, tmp_dir, args, rndSee
         
         # simulating reads
         for (fasta_file,tsv_file) in frag_files:
-            #logging.info('Read sim: {}'.format(fasta_file))
             art_params = {'--paired' : args['--art-paired'],
                           '--len' : args['--art-len'],
                           '--mflen' : args['--art-mflen'],
@@ -150,7 +149,8 @@ def sim_illumina(frag_fasta, barcode, seq_depth, total_barcodes,
     
     # art_illumina command
     art_params = ' '.join(['{} {}'.format(k,v) for k,v in art_params.items()])
-    cmd = 'art_illumina {art_params} --noALN --id {barcode} -f {fold} -i {input} -o {output_prefix}'
+    cmd = 'art_illumina {art_params} --noALN --id {barcode}'
+    cmd += ' -f {fold} -i {input} -o {output_prefix}'
     cmd = cmd.format(art_params=art_params,
                      barcode=barcode + '-',
                      fold=fold,
@@ -181,7 +181,14 @@ def sim_illumina(frag_fasta, barcode, seq_depth, total_barcodes,
     else:
         msg = 'Cannot find art_illumina output files!'
         raise ValueError(msg)    
-    
+
+def get_total_seq_len(fasta_file):
+    """Simple function that uses pyfastx to quickly read in a fasta,
+    and then the sum of sequence lengths is returned
+    """
+    x = [len(seq) for h,seq in pyfastx.Fasta(fasta_file, build_index=False)]
+    return sum(x)
+
 def calc_fold(frag_fasta, seq_depth, total_barcodes, art_params, tmp_dir):
     """Calculate fold coverage to simulate per barcode
     Parameters
@@ -199,9 +206,7 @@ def calc_fold(frag_fasta, seq_depth, total_barcodes, art_params, tmp_dir):
     """
     # fold coverage
     ## total length of fragments
-    frag_lr_fasta = linewrap_fasta(frag_fasta, tmp_dir)
-    f = Fasta(frag_lr_fasta)
-    total_frag_len = sum([len(f[x]) for x in f.keys()])
+    total_frag_len = get_total_seq_len(frag_fasta)
     ## length of reads
     try:
         read_len = int(float(art_params['--len']))
@@ -216,7 +221,7 @@ def calc_fold(frag_fasta, seq_depth, total_barcodes, art_params, tmp_dir):
     ## fold calc
     seqs_per_barcode = seq_depth / total_barcodes
     fold  = seqs_per_barcode * read_len / total_frag_len
-    
+    # return
     return fold
 
 def combine_frag_tsv(tsv_files, output_dir, debug=False):
@@ -360,35 +365,13 @@ def sim_frags(refs, n_frags, frag_size_loc, frag_size_sd,
                                             scale=frag_size_sd)
     return refs
 
-def linewrap_fasta(fasta_file, tmp_dir, width=70):
-    """Line-wrapping a fasta file in order to use as input for pyfaidx.
-    Parameters
-    ----------
-    fasta_file : str
-       fasta file path
-    tmp_dir : str
-       temporary directory
-    width : int
-       linewrap cutoff
+def read_fasta(fasta_file):
+    """Fast reading into memory of fasta file
+    return: dict
     """
-    x = os.path.splitext(fasta_file)[0]
-    out_file = os.path.join(tmp_dir, os.path.split(x)[1] + '_lr-TMP.fasta')
-    if fasta_file.endswith('.gz'):
-        _open = lambda x: gzip.open(x, 'rb')
-    else:
-        _open = lambda x: open(x)
-    with _open(fasta_file) as inF, open(out_file, 'w') as outF:
-        for line in inF:
-            if fasta_file.endswith('.gz'):
-                line = line.decode('utf-8')
-            if not line.startswith('>'):
-                line = '\n'.join(textwrap.wrap(line, width = width))
-            line = line.rstrip()
-            if line == '':
-                continue
-            outF.write(line.rstrip() + '\n')
-    return out_file            
-
+    seqs = {h:seq for h,seq in pyfastx.Fasta(fasta_file, build_index=False)}
+    return seqs
+    
 def parse_frags(refs, barcode, out_dir, tmp_dir):
     """Parsing fragment from a genome and writing them to a file.
     Giving each simulated fragment a UUID. 
@@ -408,8 +391,7 @@ def parse_frags(refs, barcode, out_dir, tmp_dir):
     taxon = regex.sub('_', taxon)
     fasta_file = refs['Fasta'].unique()[0]
     # loading fasta
-    fasta_lr_file = linewrap_fasta(fasta_file, tmp_dir)
-    f = Fasta(fasta_lr_file)
+    f = read_fasta(fasta_file)
     contig_ids = list(f.keys())
     for x in contig_ids:
         assert('|' not in x)

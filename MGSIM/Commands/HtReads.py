@@ -100,7 +100,6 @@ from MGSIM import SimHtReads
 ## logging
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
-
 def _flatten(list_of_lists):
     flattened_list = []
     for x in list_of_lists:
@@ -197,6 +196,7 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
                    args=args,
                    rndSeed=rndSeed)
     barcodes = SimHtReads.bin_barcodes(barcodes,args['--barcode-chunks'])
+    logging.info('Processing barcodes in {} chuncks'.format(len(barcodes)))
     if args['--debug'] or args['-n'] < 2:
         files = map(func, barcodes)
     else:
@@ -218,16 +218,13 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
         except OSError:
             time.sleep(3)
             rmtree(args['--tmp-dir'], ignore_errors=True)
-                        
+            
 def opt_parse(args=None):
     if args is None:        
         args = docopt(__doc__, version='0.1')
     else:
         args = docopt(__doc__, version='0.1', argv=args)
     args['-n'] = int(args['-n'])
-    if args['-n'] > 1:
-        logging.warning('Not using multiple processing due to pyfaidx'
-                        ', which is not process-safe')
-        args['-n'] = 1
+    os.environ['OMP_NUM_THREADS'] = '1'
     main(args)
    
