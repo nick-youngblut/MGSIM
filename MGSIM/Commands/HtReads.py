@@ -85,6 +85,7 @@ Description:
 from docopt import docopt
 import sys,os
 import re
+import time
 import logging
 from pprint import pprint
 from shutil import rmtree
@@ -196,11 +197,12 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
                    args=args,
                    rndSeed=rndSeed)
     barcodes = SimHtReads.bin_barcodes(barcodes,args['--barcode-chunks'])
-    if args['--debug']:
+    if args['--debug'] or args['-n'] < 2:
         files = map(func, barcodes)
     else:
-        Pool = mp.Pool(int(args['-n']))
+        Pool = mp.Pool(args['-n']) 
         files = Pool.map(func, barcodes)
+        Pool.close()
     # flatten batched output
     (fq_files,tsv_files) = flatten(files)
     # combining all frag tsv
@@ -208,14 +210,24 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
     # combining all reads
     SimHtReads.combine_reads(fq_files, outdir, name_fmt=args['--read-name'],
                              seq_depth=int(float(args['--seq-depth'])))
-    # removing temp directory
+    # removing temp directory    
     if args['--debug'] is False:
-        rmtree(args['--tmp-dir'])
-        
+        logging.info('Removing temporary directory: {}'.format(args['--tmp-dir']))
+        try:
+            rmtree(args['--tmp-dir'])
+        except OSError:
+            time.sleep(3)
+            rmtree(args['--tmp-dir'], ignore_errors=True)
+                        
 def opt_parse(args=None):
     if args is None:        
         args = docopt(__doc__, version='0.1')
     else:
         args = docopt(__doc__, version='0.1', argv=args)
+    args['-n'] = int(args['-n'])
+    if args['-n'] > 1:
+        logging.warning('Not using multiple processing due to pyfaidx'
+                        ', which is not process-safe')
+        args['-n'] = 1
     main(args)
    
