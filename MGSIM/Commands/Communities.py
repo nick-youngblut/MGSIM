@@ -34,6 +34,9 @@ Options:
   --perm-perc=<pp>    How much to vary the rank-abundances between communities. 
                       Percentage = percent of taxa to permute.
                       [default: 0]
+  --beta-div=<m>...   beta-diversity measures to calculate among communities.
+                      See scipy.spatial.distance for options.
+                      [default: braycurtis jaccard]
   --config=<c>        Config file for setting community-specific parameters
                       (& global params).
                       Community-specific parameters can include:
@@ -64,6 +67,8 @@ Description:
     * this is the relative number of genome copies for each taxon
   * "PREFIX_wAbund.txt" = taxon relative abundances weighted by genome size
     * this is the fraction of the DNA pool for each taxon
+  * "PREFIX_beta-div.txt" = beta diversity among communities
+    * see the beta-div parameter for selecting beta-diversity measures
 """
 
 # import
@@ -97,7 +102,7 @@ def main(uargs):
     for comm_id, comm in SC.items():
         if comm.richness > 1:
             SC.permute(comm, uargs['--perm-perc'])
-
+            
     # writing out abundance table
     out_file = uargs['<prefix>'] + '_abund.txt'
     SC.write_comm_table(out_file)
@@ -109,6 +114,10 @@ def main(uargs):
     out_file = uargs['<prefix>'] + '_wAbund.txt'
     SC.write_comm_table(out_file)
 
+    # beta-diversity among communities
+    out_file = uargs['<prefix>'] + '_beta-div.txt'
+    SC.beta_diversity(measures=uargs['--beta-div'], outfile=out_file)
+    
         
 def opt_parse(args=None):
     if args is None:        

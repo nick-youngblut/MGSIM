@@ -12,11 +12,12 @@ import random
 import re
 import logging
 from functools import partial
-from itertools import chain
+from itertools import chain,combinations
 from operator import itemgetter
-from collections import OrderedDict
+from collections import OrderedDict,defaultdict
 ## 3rd party
 import scipy.stats as stats
+from scipy.spatial import distance
 from configobj import ConfigObj, flatten_errors
 from Bio import SeqIO
 
@@ -374,7 +375,41 @@ class SimComms(_Comm):
             self.genome_sizes[taxon] = 0
             for record in SeqIO.parse(fasta, "fasta"):
                 self.genome_sizes[taxon] += len(record.seq)        
+
+    def beta_diversity(self, measures=['braycurtis'], outfile=None):
+        """Calculate weighted abundance: rel_abund * genome_size
         
+        Parameters
+        ----------
+        measure : which scipy.spatial.distance function to use
+        """
+        # taxon abudance table
+        df =  pd.concat([x.taxa for x in self.values()],
+                        axis=1, sort=False)
+        # distance 
+        D = defaultdict(dict)
+        psbl_msr = {'braycurtis' : distance.braycurtis,
+                    'jaccard' : distance.jaccard,
+                    'euclidean' : distance.euclidean}
+        for c1,c2 in combinations(df.columns, 2):
+            for m,func in psbl_msr.items():
+                if m in measures:
+                    if m == 'jaccard':
+                        D[m][(c1,c2)] = func(df[c1].astype(bool),
+                                             df[c2].astype(bool))
+                    else:
+                        D[m][(c1,c2)] = func(df[c1], df[c2])
+        if outfile is not None:
+            with open(outfile, 'w') as outF:
+                h = ['commX', 'commY', 'measure', 'distance']
+                outF.write('\t'.join(h) + '\n')
+                for m,v in D.items():                    
+                    for c,d in v.items():
+                        d = str(round(d,6))
+                        c = [str(x) for x in list(c)]
+                        outF.write('\t'.join(c + [m, d]) + '\n')
+        return D                          
+                
     @staticmethod
     def permute(comm, perm_perc):
         """Permute a certain percentage of the taxa abundances.
