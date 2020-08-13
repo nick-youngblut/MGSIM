@@ -249,7 +249,11 @@ def combine_frag_tsv(tsv_files, output_dir, debug=False):
         with open(F, 'r') as inF, open(out_file, 'a') as outF:
             for line in inF:
                 outF.write(line)
-            
+        # deleting temp file
+        try:
+            os.unlink(F)
+        except OSError:
+            logging.warning('Could not remove temp file: {}'.format(F))
     logging.info('File written: {}'.format(out_file))
 
 def combine_reads(fq_files, output_dir, name_fmt='{readID} BX:Z:{barcodeID}',
@@ -322,6 +326,11 @@ def _combine_reads(read_files, out_dir, out_file, name_fmt, seq_depth=None):
                             msg = 'Line {} in file {}: read-len != qual-len'
                             raise ValueError(msg.format(ii, F))
                     outF.write(line)
+            # deleting temp file
+            try:
+                os.unlink(F)
+            except OSError:
+                logging.warning('Could not remove temp file: {}'.format(F))
                         
     logging.info('File written: {}'.format(out_file))
         

@@ -15,7 +15,7 @@ Options:
   --barcode-total=<bt>    Number of barcodes 
                           [Default: 1e3]
   --barcode-chunks=<bc>   Chunk size for parallel processing of barcodes
-                          [Default: 10]
+                          [Default: 1e2]
   --seq-depth=<d>         Number of (paired) Illumina reads per sample.
                           [Default: 1e5]
   --frag-size-mean=<fsm>  Mean fragment size of input gDNA (bp)
@@ -120,32 +120,7 @@ def flatten(list_of_lists):
             _flatten(flattened_list2)]
 
 def main(args):
-    """Notes on haplotagging read simulation
-    # algorithm
-    * for each barcode batch (eg., 1000 barcodes); (in parallel)
-      * for each barcode-ID
-        * create temporary directory
-          * all temp files in this directory
-        * create reference for simulation
-          * select genomes (with replacement)
-             * weighted by taxon abundances (DNA pool)
-             * see https://stackoverflow.com/questions/10803135/weighted-choice-short-and-simple
-          * for each genome selection (possible duplicate genomes):
-            * random selection of genome region
-              * package: pyfasta             
-              * fragment length based on tuncnorm distribution
-                 * https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.truncnorm.html#scipy.stats.truncnorm
-            * output:
-              * multi-fasta file of fragments 
-                 * ><genome>__start<start>-end<end>
-              * table: <barcode> <genome> <start> <end>
-        * simulate reads on reference
-          * number_of_reads = seq_depth / barcodes
-          * art_illumina on multi-fasta file
-            * `--id` => read prefix
-            * `--out` => barcode
-        * combine read files (by batch)
-      * combine batch read files
+    """ Main interface
     """
     # check executables
     exe = 'art_illumina'
@@ -196,7 +171,8 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
                    args=args,
                    rndSeed=rndSeed)
     barcodes = SimHtReads.bin_barcodes(barcodes,args['--barcode-chunks'])
-    logging.info('Processing barcodes in {} chuncks'.format(len(barcodes)))
+    msg = 'Processing barcodes in {} chuncks of {} barcodes each'
+    logging.info(msg.format(len(barcodes), args['--barcode-chunks']))
     if args['--debug'] or args['-n'] < 2:
         files = map(func, barcodes)
     else:
@@ -213,11 +189,10 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
     # removing temp directory    
     if args['--debug'] is False:
         logging.info('Removing temporary directory: {}'.format(args['--tmp-dir']))
-        try:
-            rmtree(args['--tmp-dir'])
-        except OSError:
-            time.sleep(3)
-            rmtree(args['--tmp-dir'], ignore_errors=True)
+        rmtree(args['--tmp-dir'], ignore_errors=True)
+        if os.path.isdir(args['--tmp-dir']):
+            msg = 'Could not remove directory: {}'
+            logging.warning(msg.format(args['--tmp-dir']))
             
 def opt_parse(args=None):
     if args is None:        
