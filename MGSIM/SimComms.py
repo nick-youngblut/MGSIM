@@ -36,8 +36,7 @@ def str2dict(s):
             raise TypeError(msg)
     else:
         return s
-        
-        
+                
 def random_insert_seq(l, seq):
     """Insert seq items at random locations in list.
 
@@ -56,8 +55,7 @@ def random_insert_seq(l, seq):
     inserts = dict(zip(insert_locs, seq))
     inputs = iter(l)
     return [inserts[pos] if pos in inserts else next(inputs)
-              for pos in range(len(l) + len(seq))]
-
+            for pos in range(len(l) + len(seq))]
 
 def power_neg(*args, **kwargs):
     return 1 - np.random.power(*args, **kwargs)
@@ -381,11 +379,15 @@ class SimComms(_Comm):
         
         Parameters
         ----------
-        measure : which scipy.spatial.distance function to use
+        measure : list
+          which scipy.spatial.distance function to use
+        outfile : str
+          if not None, then file written to that path
         """
         # taxon abudance table
         df =  pd.concat([x.taxa for x in self.values()],
                         axis=1, sort=False)
+        df.fillna(0, inplace=True)
         # distance 
         D = defaultdict(dict)
         psbl_msr = {'braycurtis' : distance.braycurtis,
@@ -488,7 +490,8 @@ class SimComms(_Comm):
 
     @property
     def min_richness(self):
-        """The minimum richness of any community as defined by comm_params."""
+        """The minimum richness of any community as defined by comm_params.
+        """
         if not hasattr(self, '_min_richness'):
             setattr(self, '_min_richness', None)
         if self._min_richness is None:

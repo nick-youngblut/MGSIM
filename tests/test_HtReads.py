@@ -4,6 +4,7 @@ from __future__ import print_function
 ## batteries
 import os
 import sys
+import uuid
 import pytest
 import subprocess
 ## 3rd party
@@ -44,7 +45,7 @@ def test_help(script_runner):
 def test_main(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    temp_dir = os.path.join(data_dir, str(uuid.uuid4()))
     output_prefix = os.path.join(data_dir, 'TEST')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
@@ -60,7 +61,7 @@ def test_main(script_runner):
 def test_main_multi(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    temp_dir = os.path.join(data_dir, str(uuid.uuid4()))
     output_prefix = os.path.join(data_dir, 'TEST')
     
     ret = script_runner.run('MGSIM', 'ht_reads',
@@ -75,7 +76,7 @@ def test_main_multi(script_runner):
 def test_main_zeros(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund_zeros.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    temp_dir = os.path.join(data_dir, str(uuid.uuid4()))
     output_prefix = os.path.join(data_dir, 'TEST')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
@@ -91,7 +92,7 @@ def test_main_zeros(script_runner):
 def test_main_prefix(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    temp_dir = os.path.join(data_dir, str(uuid.uuid4()))
     output_prefix = os.path.join(data_dir, 'TEST')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
@@ -108,7 +109,7 @@ def test_main_prefix(script_runner):
 def test_main_large_frag_sd(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    temp_dir = os.path.join(data_dir, str(uuid.uuid4()))
     output_prefix = os.path.join(data_dir, 'TEST')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
