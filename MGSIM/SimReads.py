@@ -29,13 +29,14 @@ def tidy_taxon_names(x):
     x = re.sub(r'[()\/:;, ]+', '_', x)
     return x
 
-def load_genome_table(in_file):
+def load_genome_table(in_file, nproc=1):
     """Loading genome table
     Parameters
     ----------
     in_file : str
         input file path
     """
+    nproc = int(nproc)
     df = pd.read_csv(in_file, sep='\t')
     
     ## check headers
@@ -45,7 +46,11 @@ def load_genome_table(in_file):
         raise ValueError('Cannot find table columns: {}'.format(diff))
 
     # getting genome sizes
-    df['Genome_size'] = [_genome_size(x) for i,x in df.iterrows()]
+    if nproc > 1:
+        p = Pool(nproc)
+        df['Genome_size'] = p.map(_genome_size, [x for i,x in df.iterrows()])
+    else:
+        df['Genome_size'] = [_genome_size(x) for i,x in df.iterrows()]
 
     # tidy taxon names
     df['Taxon'] = df['Taxon'].astype(str).apply(tidy_taxon_names)

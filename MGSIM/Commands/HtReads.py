@@ -129,8 +129,10 @@ def main(args):
     
     # load tables
     ## table mapping taxa to genomes
-    genome_table = SimReads.load_genome_table(args['<genome_table>'])
+    logging.info('Loading genome table...')
+    genome_table = SimReads.load_genome_table(args['<genome_table>'], nproc=args['-n'])
     ## table of taxon relative abundances
+    logging.info('Loading taxon abundance table...')
     abund_table = SimReads.load_abund_table(args['<abund_table>'])
 
     # Sim Params
@@ -150,7 +152,6 @@ def main(args):
                           genome_table = genome_table,
                           rndSeed = rndSeed)
 
-
 def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
     # I/O
     outdir = os.path.join(args['<output_dir>'], str(comm_id))
@@ -162,6 +163,7 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
     ## batching by barcodes
     ### creating barcode ID array
     n_barcodes = int(float(args['--barcode-total']))
+    logging.info('Creating {} barcodes...'.format(n_barcodes))
     barcodes = SimHtReads.barcodes(n_barcodes)
     ### simulating barcodes
     func = partial(SimHtReads.sim_barcode_reads,
@@ -169,9 +171,10 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
                    abund_table=abund_table,
                    tmp_dir=tmp_dir,
                    args=args,
-                   rndSeed=rndSeed)
-    barcodes = SimHtReads.bin_barcodes(barcodes,args['--barcode-chunks'])
-    msg = 'Processing barcodes in {} chuncks of {} barcodes each'
+                   rndSeed=rndSeed,
+                   debug=args['--debug'])
+    barcodes = SimHtReads.bin_barcodes(barcodes, args['--barcode-chunks'])
+    msg = 'Processing barcodes in {} chuncks of {} barcodes...'
     logging.info(msg.format(len(barcodes), args['--barcode-chunks']))
     if args['--debug'] or args['-n'] < 2:
         files = map(func, barcodes)
@@ -182,8 +185,10 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
     # flatten batched output
     (fq_files,tsv_files) = flatten(files)
     # combining all frag tsv
+    logging.info('Combining all fragment info tables (n={})'.format(len(tsv_files)))
     SimHtReads.combine_frag_tsv(tsv_files, outdir)
     # combining all reads
+    logging.info('Combining all read fastq files (n={})'.format(len(fq_files)))    
     SimHtReads.combine_reads(fq_files, outdir, name_fmt=args['--read-name'],
                              seq_depth=int(float(args['--seq-depth'])))
     # removing temp directory    
