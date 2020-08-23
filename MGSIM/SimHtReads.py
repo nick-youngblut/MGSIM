@@ -21,7 +21,7 @@ from distutils.spawn import find_executable
 import numpy as np
 import pandas as pd
 import pyfastx
-from Bio import SeqIO
+from Bio import SeqIO,Seq
 #from pyfaidx import Fasta
 from scipy.stats import truncnorm
 ## application
@@ -399,7 +399,10 @@ def read_fasta(fasta_file):
     """
     seqs = {h:seq for h,seq in pyfastx.Fasta(fasta_file, build_index=False)}
     return seqs
-    
+
+def revcomp(seq):
+    return Seq.Seq(seq).reverse_complement()
+
 def parse_frags(refs, barcode, outFr, outFt):
     """Parsing fragment from a genome and writing them to a file.
     Giving each simulated fragment a UUID. 
@@ -438,9 +441,14 @@ def parse_frags(refs, barcode, outFr, outFt):
                 frag_max_end = 1 if frag_max_end < 1 else frag_max_end
                 frag_start = np.random.randint(0, frag_max_end)
                 frag_end = frag_start + frag_size
+                ## randomly selecting strand
+                if np.random.randint(0,2,1)[0] == 1:
+                    seq = revcomp(f[contig_id][frag_start:frag_end])
+                    frag_start,frag_end = frag_end,frag_start
+                else:
+                    seq = f[contig_id][frag_start:frag_end]                
                 ## writing sequence
-                outFr.write('>{}\n{}\n'.format(frag_uuid,
-                                              f[contig_id][frag_start:frag_end]))
+                outFr.write('>{}\n{}\n'.format(frag_uuid,seq))
                 contigs.append(contig_id)
                 # writing tsv of positions
                 outFt.write('\t'.join([str(barcode),
