@@ -19,7 +19,7 @@ Options:
   --seq-depth=<d>         Number of (paired) Illumina reads per sample.
                           [Default: 1e5]
   --frag-size-mean=<fsm>  Mean fragment size of input gDNA (bp)
-                          [Default: 10000]
+                          [Default: 14000]
   --frag-size-sd=<fss>    Fragment size standard deviation of input gDNA (bp)
                           [Default: 1000]
   --frag-size-min=<fsa>   Min fragment size of input gDNA (bp)
@@ -100,6 +100,7 @@ from MGSIM import SimHtReads
 ## logging
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
+
 def _flatten(list_of_lists):
     flattened_list = []
     for x in list_of_lists:
@@ -151,14 +152,25 @@ def main(args):
                           abund_table = comm_tbl,
                           genome_table = genome_table,
                           rndSeed = rndSeed)
+    # removing base tmp dir
+    if args['--debug'] is False:
+        rmtree(args['--tmp-dir'], ignore_errors=True)
 
+def write_tsv_header(filename):    
+    h = ['Barcode', 'Frag_ID', 'Genome', 'Contig', 'Frag_start', 'Frag_end']
+    with open(filename, 'w') as outF:
+        outF.write('\t'.join(h) + '\n')
+        
 def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
     # I/O
     outdir = os.path.join(args['<output_dir>'], str(comm_id))
-    ## temp dir
+    if not os.path.isdir(outdir):
+        os.makedirs(outdir)
+    ## community temp dir    
     tmp_dir = os.path.join(args['--tmp-dir'], str(comm_id))
     if not os.path.isdir(tmp_dir):
         os.makedirs(tmp_dir)
+    logging.info('Using temporary directory: {}'.format(tmp_dir))
     
     ## batching by barcodes
     ### creating barcode ID array
@@ -166,38 +178,44 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
     logging.info('Creating {} barcodes...'.format(n_barcodes))
     barcodes = SimHtReads.barcodes(n_barcodes)
     ### simulating barcodes
+    out_files = {'tsv' : os.path.join(outdir, 'fragments.tsv'),
+                 'R1' : os.path.join(outdir, 'R1.fq'),
+                 'R2' : os.path.join(outdir, 'R2.fq')}
+    #### deleting outfiles if existing
+    for F in out_files.values():
+        if os.path.isfile(F):
+            os.unlink(F)
+    write_tsv_header(out_files['tsv'])
+    ### parallel function call
     func = partial(SimHtReads.sim_barcode_reads,
                    genome_table=genome_table,
                    abund_table=abund_table,
-                   tmp_dir=tmp_dir,
+                   out_files=out_files,
+                   tmp_dir=tmp_dir,                   
                    args=args,
                    rndSeed=rndSeed,
                    debug=args['--debug'])
     barcodes = SimHtReads.bin_barcodes(barcodes, args['--barcode-chunks'])
     msg = 'Processing barcodes in {} chuncks of {} barcodes...'
-    logging.info(msg.format(len(barcodes), args['--barcode-chunks']))
+    logging.info(msg.format(len(barcodes), args['--barcode-chunks']))    
     if args['--debug'] or args['-n'] < 2:
         files = map(func, barcodes)
     else:
         Pool = mp.Pool(args['-n']) 
         files = Pool.map(func, barcodes)
+        files = [x for x in files]
         Pool.close()
-    # flatten batched output
-    (fq_files,tsv_files) = flatten(files)
-    # combining all frag tsv
-    logging.info('Combining all fragment info tables (n={})'.format(len(tsv_files)))
-    SimHtReads.combine_frag_tsv(tsv_files, outdir)
-    # combining all reads
-    logging.info('Combining all read fastq files (n={})'.format(len(fq_files)))    
-    SimHtReads.combine_reads(fq_files, outdir, name_fmt=args['--read-name'],
-                             seq_depth=int(float(args['--seq-depth'])))
-    # removing temp directory    
+        
+    # status
+    for k,v in out_files.items():
+        logging.info('File written: {}'.format(v))
+        
+    # removing community temp directory
     if args['--debug'] is False:
-        logging.info('Removing temporary directory: {}'.format(args['--tmp-dir']))
-        rmtree(args['--tmp-dir'], ignore_errors=True)
-        if os.path.isdir(args['--tmp-dir']):
-            msg = 'Could not remove directory: {}'
-            logging.warning(msg.format(args['--tmp-dir']))
+        logging.info('Removing temporary directory: {}'.format(tmp_dir))
+        rmtree(tmp_dir, ignore_errors=True)
+        if os.path.isdir(tmp_dir):
+            logging.warning('Could not remove directory: {}'.format(tmp_dir))
             
 def opt_parse(args=None):
     if args is None:        

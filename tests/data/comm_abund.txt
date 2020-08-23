@@ -1,4 +1,4 @@
 Community	Taxon	Perc_rel_abund	Rank
-1	Methanosarcina_barkeri_MS	92.724789314	1
-1	Escherichia_coli_K-12_MG1655	4.640985566	2
-1	Clostridium_perfringens_ATCC_13124	2.634225121	3
+1	Methanosarcina_barkeri_MS	97.283170163	1
+1	Escherichia_coli_K-12_MG1655	1.746470310	2
+1	Clostridium_perfringens_ATCC_13124	0.970359526	3

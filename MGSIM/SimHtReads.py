@@ -6,7 +6,9 @@ import sys
 import re
 import time
 import uuid
+import fcntl
 import logging
+import itertools
 import subprocess
 from glob import glob
 from pprint import pprint
@@ -48,8 +50,8 @@ def bin_barcodes(barcodes, binsize=1000):
                        np.arange(0,barcodes.shape[0],binsize))
     return [barcodes[bins == x] for x in np.unique(bins)]
 
-def sim_barcode_reads(barcodes, genome_table, abund_table, tmp_dir, args,
-                      rndSeed=None, debug=False):
+def sim_barcode_reads(barcodes, genome_table, abund_table, out_files,
+                      tmp_dir, args, rndSeed=None, debug=False):
     """Simulate reads for each fragment associated with each barcode
     Parameters
     ----------
@@ -59,6 +61,10 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, tmp_dir, args,
         Table that maps genome fasta to each taxon
     abund_table : pd.dataframe
         Table listing relative abundances of each taxon
+    out_files : dict
+        {tsv : tsv output file path, R1 : fastq read1 file path, R2 : fastq read2 file path}
+    tmp_dir : str
+        Temporary directory path (created if not existing)
     args: dict
         Command line args 
     rndSeed: int
@@ -117,9 +123,17 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, tmp_dir, args,
         read_fq_files.append(fasta_files)
         frag_tsv_files.append(tsv_file)
 
-    return [read_fq_files, frag_tsv_files]
-
+    # concatenating files
+    ## tsv
+    combine_frag_tsv(frag_tsv_files, out_files['tsv'])
+    ## fastq
+    combine_reads(read_fq_files, out_files, name_fmt=args['--read-name'])
+    # return file names
+    return [frag_tsv_files, read_fq_files]
+        
 def format_params(d):
+    """Formatting parameters for system call
+    """
     dd = {}
     for k,v in d.items():
         if v == True:
@@ -191,7 +205,7 @@ def sim_illumina(frag_fasta, barcode, seq_depth, total_barcodes,
         return [R0_file]
     else:
         msg = 'Cannot find art_illumina output files!'
-        raise ValueError(msg)    
+        raise ValueError(msg)
 
 def get_total_seq_len(fasta_file):
     """Simple function that uses pyfastx to quickly read in a fasta,
@@ -235,47 +249,46 @@ def calc_fold(frag_fasta, seq_depth, total_barcodes, art_params, tmp_dir):
     # return
     return fold
 
-def combine_frag_tsv(tsv_files, output_dir, debug=False):
-    """ Concat all genome fragment tsv files
+def combine_frag_tsv(tsv_files, out_file, debug=False):
+    """ Read in all genome fragment tsv files and write all to one file.
+    File locking is used in case of multiprocessing.
     Parameters
     ----------
     tsv_files : iterable
         Iterable of fragment tsv files
-    output_dir : str
-        Final output directory for read files
+    out_file : str
+        Output file path
     debug : bool
         Debug mode
     """
-    # writing files
-    if not os.path.isdir(output_dir):
-        os.makedirs(output_dir)
-    out_file = os.path.join(output_dir, 'fragments.tsv')
-    ## header
-    with open(out_file, 'w') as outF:
-        outF.write('\t'.join(['Barcode', 'Frag_ID',
-                              'Genome', 'Contig',
-                              'Frag_start', 'Frag_end']) + '\n')
-    ## body
+    assert len(tsv_files) == len(list(set(tsv_files))), 'tsv files are not unique!'
+    # loading tsv files into memory
+    tsv = []
     for F in list(set(tsv_files)):
-        with open(F, 'r') as inF, open(out_file, 'a') as outF:
+        with open(F, 'r') as inF:
             for line in inF:
-                outF.write(line)
+                tsv.append(line)
         # deleting temp file
         try:
             os.unlink(F)
         except OSError:
-            logging.warning('Could not remove temp file: {}'.format(F))
-    logging.info('File written: {}'.format(out_file))
-
-def combine_reads(fq_files, output_dir, name_fmt='{readID} BX:Z:{barcodeID}',
-                  seq_depth=None, debug=False):
-    """ Concat all read files
+            logging.warning('Could not remove temp file: {}'.format(F))            
+    # writing (w/ file locking)
+    with open(out_file, 'a') as outF:
+        fcntl.flock(outF, fcntl.LOCK_EX)
+        for x in tsv:
+            outF.write(x)
+        fcntl.flock(outF, fcntl.LOCK_UN)
+                
+def combine_reads(fq_files, out_files, name_fmt='{readID} BX:Z:{barcodeID}', debug=False):
+    """ Reading in sequences from fastq files and writing to one file (per R1/R2).
+    File locking is used in case of multiprocessing.
     Parameters
     ----------
     fq_files : iterable
         Iterable of fastq read files
-    output_dir : str
-        Final output directory for read files
+    out_files : dict
+        dict of file names, {R1 : read1_fastq_file, R2 : read2_fastq_file}
     name_fmt : str
         How to format the read name. "{readID} BX:Z:{barcodeID}" will generate names such as "@ST-J00101:121:HYCGGBBXX:5:1101:30533:1191 BX:Z:A58B91C07D86"
     debug : bool
@@ -283,68 +296,63 @@ def combine_reads(fq_files, output_dir, name_fmt='{readID} BX:Z:{barcodeID}',
     """    
     # split by read pairs
     R1_files = [x[0] for x in fq_files]
+    assert len(R1_files) == len(list(set(R1_files))), 'fastq files are not unique!'
     try:
         R2_files = [x[1] for x in fq_files]
     except IndexError:
         R2_files = None
         
     # writing files
-    if not os.path.isdir(output_dir):
-        os.makedirs(output_dir)
     ## read1
-    R1_files = _combine_reads(R1_files, output_dir, 'R1.fq', name_fmt, seq_depth)
+    _combine_reads(R1_files, out_files['R1'], name_fmt)
     ## read2
     if R2_files is not None:
-        R2_files = _combine_reads(R2_files, output_dir, 'R2.fq', name_fmt, seq_depth)
+        _combine_reads(R2_files, out_files['R2'], name_fmt)
 
 def fix_nucs(seq):
     ambig = {'A', 'T', 'G', 'C'}
     seq = ['N' if x not in ambig else x for x in seq.rstrip()]
     return ''.join(seq) + '\n'
-        
-def _combine_reads(read_files, out_dir, out_file, name_fmt, seq_depth=None):
+
+def _combine_reads(read_files, out_file, name_fmt='{readID} BX:Z:{barcodeID}'):
     """Combining temporary read files.
     eg., @ST-J00101:121:HYCGGBBXX:5:1101:30533:1191 BX:Z:A58B91C07D86
     """
-    if seq_depth is not None:
-        cnt = 0
-    out_file = os.path.join(out_dir, out_file)
-    with open(out_file, 'w') as outF:
-        for i,F in enumerate(read_files):
-            if seq_depth is not None and cnt > seq_depth:
-                break
-            with open(F, 'r') as inF:
-                seq_len = 0
-                qual_len = 0
-                for ii,line in enumerate(inF):
-                    if ii % 4 == 0:   # read header
-                        if seq_depth is not None:
-                            cnt += 1
-                            if cnt > seq_depth:
-                                break
-                        line = line.split('-')
-                        X = name_fmt.format(readID=line[0], barcodeID=line[1])
-                        outF.write(X + '\n')
-                        seq_len = 0
-                        qual_len = 0
-                        continue
-                    elif ii % 4 == 1:  # read sequence
-                        seq_len = len(line.rstrip())
-                        line = fix_nucs(line)
-                    elif ii % 4 == 3:  # read quality
-                        qual_len = len(line.rstrip())
-                        if seq_len != qual_len:
-                            msg = 'Line {} in file {}: read-len != qual-len'
-                            raise ValueError(msg.format(ii, F))
-                    outF.write(line)
-            # deleting temp file
-            try:
-                os.unlink(F)
-            except OSError:
-                logging.warning('Could not remove temp file: {}'.format(F))
-                        
-    logging.info('File written: {}'.format(out_file))
-        
+    fq = []
+    for i,F in enumerate(read_files):
+        with open(F) as inF:
+            seq_len = 0
+            qual_len = 0
+            for ii,line in enumerate(inF):
+                if ii % 4 == 0:   # read header
+                    line = line.split('-')
+                    X = name_fmt.format(readID=line[0], barcodeID=line[1])
+                    fq.append(X + '\n')
+                    seq_len = 0
+                    qual_len = 0
+                    continue
+                elif ii % 4 == 1:  # read sequence
+                    seq_len = len(line.rstrip())
+                    line = fix_nucs(line)
+                elif ii % 4 == 3:  # read quality
+                    qual_len = len(line.rstrip())
+                    if seq_len != qual_len:
+                        msg = 'Line {} in file {}: read-len != qual-len'
+                        raise ValueError(msg.format(ii, F))
+                fq.append(line)
+        # deleting temp file
+        try:
+            os.unlink(F)
+        except OSError:
+            logging.warning('Could not remove temp file: {}'.format(F))
+
+    ### writing
+    with open(out_file, 'a') as outF:
+        fcntl.flock(outF, fcntl.LOCK_EX)
+        for x in fq:
+            outF.write(x)
+        fcntl.flock(outF, fcntl.LOCK_UN)            
+
 def select_refs(n_frags, genome_table):
     """Selecting genomes (with replacement)
     -- Columns in genome_table --
@@ -448,7 +456,8 @@ def parse_frags(refs, barcode, outFr, outFt):
         msg = 'For taxon "{}", cannot find contig with length >= fragment size ({})'
         raise ValueError(taxon, msg.format(frag_size))
 
-def barcodes(n):
+
+def barcodes(n_barcodes, n_idx=96):
     """Return an array (len=n) of barcode IDs
     # barcode naming: 
       The 12-bp long i5-barcode is composed of 5bp "A-part"
@@ -458,16 +467,27 @@ def barcodes(n):
       In total we have 96 different A, B, C, D parts = 85 million combinations.
     Parameters
     ----------
-    n : int
-        number of barcodes
+    n_barcodes : int
+        number of barcodes to generate
+    n_idx : int
+        number of indices (eg., 1-96)
     """
-    func = np.vectorize(_barcode_ids)
-    return func(np.arange(n))
-
-def _barcode_ids(start=1, end=96):
-    x = _barcode_id('A') + _barcode_id('B') + _barcode_id('C') + _barcode_id('D')
+    idx = [x+1 for x in range(n_idx)]
+    barcodes = []
+    for comb in itertools.combinations_with_replacement(idx, 4):
+        barcodes.append(_barcode_ids(comb))
+        if len(barcodes) >= n_barcodes:
+            break
+    assert len(barcodes) == len(list(set(barcodes))), 'barcodes are not unique!'
+    return np.asarray(barcodes)
+    
+def _barcode_ids(idx):
+    x = _barcode_id('A', idx[0]) + \
+        _barcode_id('B', idx[1]) + \
+        _barcode_id('C', idx[2]) + \
+        _barcode_id('D', idx[3])
     return x
 
-def _barcode_id(Char, start=1, end=96):
-    x = Char + '{0:02d}'.format(np.random.randint(start,end,dtype='int'))
-    return x
+def _barcode_id(Char, val):
+    return Char + '{0:02d}'.format(val)
+
