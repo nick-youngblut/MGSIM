@@ -203,8 +203,8 @@ def sim_per_community(args, comm_id, abund_table, genome_table, rndSeed):
     else:
         Pool = mp.Pool(args['-n']) 
         files = Pool.map(func, barcodes)
-        files = [x for x in files]
         Pool.close()
+    files = [x for x in files]
         
     # status
     for k,v in out_files.items():
