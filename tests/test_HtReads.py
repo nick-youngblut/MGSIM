@@ -21,12 +21,18 @@ data_dir = os.path.join(test_dir, 'data')
 tmp_dir = os.path.join(test_dir, 'tmp')
 out_dir = os.path.join(test_dir, 'output')
 
-def validate_fastq(data_dir):
+def validate_fastq(base_dir):
     # validating fastq
-    output_R = os.path.join(data_dir, 'TEST', '1', 'R1.fq')
+    ## Read1
+    output_R = os.path.join(base_dir, '1', 'R1.fq')
+    if not os.path.isfile(output_R):
+        raise IOError('Cannot find file: {}'.format(output_R))
     ret = subprocess.run(['fqtools', 'validate', output_R])
     assert ret.returncode == 0
-    output_R = os.path.join(data_dir, 'TEST', '1', 'R2.fq')
+    ## Read2
+    output_R = os.path.join(base_dir, '1', 'R2.fq')
+    if not os.path.isfile(output_R):
+        raise IOError('Cannot find file: {}'.format(output_R))
     ret = subprocess.run(['fqtools', 'validate', output_R])
     assert ret.returncode == 0
 
@@ -57,7 +63,7 @@ def test_main(script_runner):
                             '--rndSeed', '8294',
                             genome_table, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir)
+    validate_fastq(output_prefix)
 
 def test_main_multi(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
@@ -72,7 +78,7 @@ def test_main_multi(script_runner):
                             '--rndSeed', '8294',
                             genome_table, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir)
+    validate_fastq(output_prefix)
 
 def test_main_zeros(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
@@ -88,7 +94,7 @@ def test_main_zeros(script_runner):
                             '--rndSeed', '8294',
                             genome_table, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir)
+    validate_fastq(output_prefix)
     
 def test_main_prefix(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
@@ -105,7 +111,7 @@ def test_main_prefix(script_runner):
                             '--rndSeed', '8294',
                             genome_table, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir)
+    validate_fastq(output_prefix)
 
 def test_main_large_frag_sd(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
@@ -122,4 +128,4 @@ def test_main_large_frag_sd(script_runner):
                             '--seq-depth', '5e3',
                             genome_table, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir)     
+    validate_fastq(output_prefix)     
