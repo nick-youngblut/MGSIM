@@ -58,7 +58,20 @@ def query_assembly(acc, genome_id, outdir, rename=False, ambig_cutoff=0, tries=1
     logging.info(msg.format(acc))
     
     # query assembly
-    record = Entrez.read(Entrez.esearch(db="assembly", term=acc))
+    ## getting records
+    attempt = 0
+    while 1:
+        attempt += 1
+        if attempt > tries:
+            logging.warning('Exceeded attempts to download: {}'.format(acc))
+            record = {'IdList' : []} 
+        try:
+            record = Entrez.read(Entrez.esearch(db="assembly", term=acc))
+            break
+        except HTTPError as e:
+            logging.info('HTTPError! Error code: {}. Retrying...'.format(e.code))
+            continue
+    ## getting sequence data
     accs = []
     for ID in record['IdList']:
         rec = Entrez.read(Entrez.esummary(db="assembly", id=ID, report="full"), validate=False)
