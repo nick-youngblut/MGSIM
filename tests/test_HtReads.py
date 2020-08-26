@@ -47,7 +47,7 @@ def test_main(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
     temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(out_dir, 'TEST')
+    output_prefix = os.path.join(out_dir, 'TEST-main')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,
@@ -63,7 +63,7 @@ def test_main_multi(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
     temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(out_dir, 'TEST')
+    output_prefix = os.path.join(out_dir, 'TEST-main-multi')
     
     ret = script_runner.run('MGSIM', 'ht_reads',
                             '--art-paired', '-n', '2',
@@ -78,7 +78,7 @@ def test_main_zeros(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund_zeros.txt')
     temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(out_dir, 'TEST')
+    output_prefix = os.path.join(out_dir, 'TEST-main-zeros')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,
@@ -94,7 +94,7 @@ def test_main_prefix(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
     temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(out_dir, 'TEST')
+    output_prefix = os.path.join(out_dir, 'TEST-main-prefix')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,
@@ -111,7 +111,7 @@ def test_main_large_frag_sd(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
     temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(out_dir, 'TEST')
+    output_prefix = os.path.join(out_dir, 'TEST-main-largeFragSize')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,
