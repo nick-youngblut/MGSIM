@@ -18,7 +18,8 @@ from MGSIM.Commands import HtReads as HtReads_CMD
 # data dir
 test_dir = os.path.join(os.path.dirname(__file__))
 data_dir = os.path.join(test_dir, 'data')
-
+tmp_dir = os.path.join(test_dir, 'tmp')
+out_dir = os.path.join(test_dir, 'output')
 
 def validate_fastq(data_dir):
     # validating fastq
@@ -45,8 +46,8 @@ def test_help(script_runner):
 def test_main(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
+    output_prefix = os.path.join(out_dir, 'TEST')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,
@@ -61,8 +62,8 @@ def test_main(script_runner):
 def test_main_multi(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
+    output_prefix = os.path.join(out_dir, 'TEST')
     
     ret = script_runner.run('MGSIM', 'ht_reads',
                             '--art-paired', '-n', '2',
@@ -76,8 +77,8 @@ def test_main_multi(script_runner):
 def test_main_zeros(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund_zeros.txt')
-    temp_dir = os.path.join(data_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
+    output_prefix = os.path.join(out_dir, 'TEST')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,
@@ -92,8 +93,8 @@ def test_main_zeros(script_runner):
 def test_main_prefix(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
+    output_prefix = os.path.join(out_dir, 'TEST')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,
@@ -109,8 +110,8 @@ def test_main_prefix(script_runner):
 def test_main_large_frag_sd(script_runner):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
+    output_prefix = os.path.join(out_dir, 'TEST')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,

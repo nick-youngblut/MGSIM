@@ -83,10 +83,12 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, out_files,
     for barcode in barcodes:
         if debug:
             logging.info('Processing barcode: {}'.format(barcode))
-        # number of fragments
+        # number of fragments for the barcode
         n_frags = np.random.normal(loc=float(args['--frag-bc-mean']),
                                    scale=float(args['--frag-bc-sd']))
         n_frags = int(round(n_frags, 0))
+        if n_frags <= 0:
+            continue
         
         # selecting reference genomes (with replacement) for generating random fragments 
         refs = select_refs(n_frags, genome_table)
@@ -99,7 +101,7 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, out_files,
                          frag_size_max=int(args['--frag-size-max']))
 
         # parsing fragments
-        fasta_file = os.path.join(tmp_dir, barcode + '.fq')
+        fasta_file = os.path.join(tmp_dir, barcode + '.fna')
         tsv_file = os.path.join(tmp_dir, barcode + '.tsv')
         with open(fasta_file, 'w') as outFr, open(tsv_file, 'w') as outFt:
             for taxon in refs['Taxon'].unique():
@@ -211,7 +213,10 @@ def get_total_seq_len(fasta_file):
     """Simple function that uses pyfastx to quickly read in a fasta,
     and then the sum of sequence lengths is returned
     """
-    x = [len(seq) for h,seq in pyfastx.Fasta(fasta_file, build_index=False)]
+    try:
+        x = [len(seq) for h,seq in pyfastx.Fasta(fasta_file, build_index=False)]
+    except RuntimeError:
+        x = [0]
     return sum(x)
 
 def calc_fold(frag_fasta, seq_depth, total_barcodes, art_params, tmp_dir):
@@ -245,7 +250,10 @@ def calc_fold(frag_fasta, seq_depth, total_barcodes, art_params, tmp_dir):
     read_len = read_len * 2 if is_paired else read_len
     ## fold calc
     seqs_per_barcode = seq_depth / float(total_barcodes)
-    fold  = seqs_per_barcode * read_len / total_frag_len
+    try:
+        fold  = seqs_per_barcode * read_len / total_frag_len
+    except ZeroDivisionError:
+        fold = 0
     # return
     return fold
 

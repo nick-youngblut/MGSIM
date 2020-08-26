@@ -21,6 +21,8 @@ tests/data/*.txt
 tests/data/temp_read_files/
 tests/data/TEST*
 tests/data/renamed/
+tests/tmp/
+tests/output/
 tmp/
 *_OLD/
 *_OLD
