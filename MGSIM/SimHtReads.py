@@ -173,6 +173,8 @@ def sim_illumina(frag_fasta, barcode, seq_depth, total_barcodes,
     
     # calculate fold coverage to simulate
     fold = calc_fold(frag_fasta, seq_depth, total_barcodes, art_params, tmp_dir=tmp_dir)
+    if fold <= 0:
+        return [None]
     
     # art_illumina command
     art_params = ' '.join(['{} {}'.format(k,v) for k,v in art_params.items()])
@@ -192,6 +194,8 @@ def sim_illumina(frag_fasta, barcode, seq_depth, total_barcodes,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as e:
+        sys.stderr.write(res.stderr.decode() + '\n')
+        sys.stderr.write(res.stdout.decode() + '\n')
         raise e
     if debug is True:
         sys.stderr.write(res.stderr.decode() + '\n')
@@ -303,7 +307,7 @@ def combine_reads(fq_files, out_files, name_fmt='{readID} BX:Z:{barcodeID}', deb
         Debug mode
     """    
     # split by read pairs
-    R1_files = [x[0] for x in fq_files]
+    R1_files = [x[0] for x in fq_files if x[0] is not None]
     assert len(R1_files) == len(list(set(R1_files))), 'fastq files are not unique!'
     try:
         R2_files = [x[1] for x in fq_files]
