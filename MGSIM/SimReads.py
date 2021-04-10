@@ -165,11 +165,12 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
     if not os.path.isdir(temp_dir):
         os.makedirs(temp_dir)
     ## output dir
+    output_dir = os.path.join(output_dir, 'illumina')
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
         
     # simulate per sample
-    logging.info('Simulating reads...')
+    logging.info('Simulating Illumina reads...')
     func = partial(sim_art,
                    art_params=art_params,
                    temp_dir=temp_dir,
@@ -266,7 +267,8 @@ def sim_art(x, art_params, temp_dir, rndSeed=None, debug=False):
         msg = 'Cannot find art_illumina output files!'
         raise ValueError(msg)
    
-def combine_reads_by_sample(sample, fq_files, temp_dir, file_prefix, output_dir, debug=False):
+def combine_reads_by_sample(sample, fq_files, temp_dir, file_prefix, output_dir,
+                            debug=False):
     """
     Concat all sample-taxon read files into per-sample read files
     Parameters
@@ -328,3 +330,138 @@ def _combine_reads(read_files, output_dir, output_file):
             os.remove(in_file)
 
     return output_file
+
+def sim_pacbio(sample_taxon, output_dir, seq_depth, sl_params,
+               temp_dir, nproc=1, rndSeed=None, debug=False):
+    """
+    Simulate pacbio reads
+    Parameters
+    ----------
+    sample_taxon : list
+        [Community,Taxon,Genome_size,Fasta,Perc_rel_abund,Fold]
+    output_dir : str
+        Output director for all read files
+    seq_depth : int
+        Sequencing depth per sample
+    sl_params : dict
+        Parameters provided to SimLord
+    temp_dir : str
+        Temporary file directory
+    nproc : int
+        Number of parallel processes
+    debug : bool
+        Debug mode
+    """
+    # setting seed (also passed to read simulator)
+    if rndSeed is not None:
+        random.seed(rndSeed)
+        
+    # check that simulator exists
+    exe = 'simlord'
+    if find_executable(exe) == '':
+        raise IOError('Cannot find executable: {}'.format(exe))
+    
+    # calculating fraction of total reads to simulate
+    for x in sample_taxon:
+        perc_rel_abund = float(x[4])
+        x.append(int(perc_rel_abund / 100.0 * seq_depth))
+
+    # directories
+    ## temp dir
+    if not os.path.isdir(temp_dir):
+        os.makedirs(temp_dir)
+    ## output dir
+    output_dir = os.path.join(output_dir, 'pacbio')
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+        
+    # simulate per sample
+    logging.info('Simulating PacBio reads...')
+    func = partial(sim_simlord,
+                   sl_params=sl_params,
+                   temp_dir=temp_dir,
+                   debug=debug)
+    if debug is True:
+        fq_files = map(func, sample_taxon)
+    else:
+        p = Pool(nproc)
+        fq_files = p.map(func, sample_taxon)
+    fq_files = list(fq_files)
+
+    # combining all reads by sample
+    logging.info('Combining simulated reads by sample...')    
+    comms = list(set([x[0] for x in sample_taxon]))
+    func = partial(combine_reads_by_sample,
+                   fq_files=fq_files,
+                   temp_dir=temp_dir,
+                   file_prefix='pacbio',
+                   output_dir=output_dir,
+                   debug=debug)
+    if debug is True:
+        res = map(func, comms)
+    else:
+        p = Pool(nproc)
+        res = p.map(func, comms)
+    res = list(res)
+
+    # removing temp dir
+    logging.info('Removing temp directory...')
+    rmtree(temp_dir)
+    
+    # status
+    for sample_list in res:
+        for file_name in sample_list:
+            if file_name is not None:
+                logging.info('File written: {}'.format(file_name))
+
+def sim_simlord(x, sl_params, temp_dir, debug=False):
+    """
+    Simulate pacbio reads with simlord
+    Parameters
+    ----------
+    x : list
+        [Community,Taxon,Genome_size,Fasta,Perc_rel_abund,Fold]
+    """
+    community = str(x[0])
+    taxon = str(x[1])
+    fasta = str(x[3])
+    perc_rel_abund = float(x[4])
+    n_reads = float(x[5])
+    
+    # output
+    ## temporary directories
+    out_dir = os.path.join(temp_dir, str(community), taxon)
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+    ## temporary files
+    output_prefix = os.path.join(out_dir, 'pacbio')
+    
+    # art command
+    sl_params = ' '.join(['{} {}'.format(k,v) for k,v in sl_params.items()])
+    cmd = 'simlord {sl_params} --num-reads {n_reads}'
+    cmd += ' --read-reference {input} {output_prefix}'
+    cmd = cmd.format(sl_params=sl_params,
+                     n_reads=int(n_reads),
+                     input=fasta,
+                     output_prefix=output_prefix)
+    
+    ## system call
+    if debug is True:
+        sys.stderr.write('CMD: ' + cmd + '\n')
+    try:
+        res = subprocess.run(cmd, check=True, shell=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        raise e
+    if debug is True:
+        sys.stderr.write(res.stderr.decode() + '\n')
+        sys.stderr.write(res.stdout.decode() + '\n')
+        
+    # check that files have been created
+    R0_file = output_prefix + '.fastq'
+    if os.path.isfile(R0_file):
+        return [community, R0_file]
+    else:
+        msg = 'Cannot find simlord output fastq file!'
+        raise ValueError(msg)

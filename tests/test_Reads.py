@@ -75,3 +75,18 @@ def test_main_unpaired(script_runner):
     assert ret.success
     validate_fastq(data_dir, False)
 
+def test_main_pacbio(script_runner):
+    genomeList = os.path.join(data_dir, 'genome_list.txt')
+    abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
+    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    output_prefix = os.path.join(data_dir, 'TEST')
+    ret = script_runner.run('MGSIM', 'reads',
+                            '-n', '2',
+                            '--art-paired',
+                            '--tmp-dir', temp_dir,
+                            '--sr-seq-depth', '1000',
+                            '--pb-seq-depth', '100',
+                            '--rndSeed', '8294',
+                            genomeList, abund_table, output_prefix)
+    assert ret.success
+    validate_fastq(data_dir)

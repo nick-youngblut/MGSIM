@@ -24,6 +24,10 @@ Options:
                       [Default: 10]
   --art-seqSys=<as>   art_illumina --seqSys parameter.
                       [Default: HS25]
+  --pb-seq-depth=<d>  Number of PacBio reads per sample.
+                      [Default: 0]
+  --pb-min-len=<ml>   Minimum read length for PacBio reads.
+                      [Default: 500]  
   --tmp-dir=<td>      Temporary directory
                       [Default: .sim_reads]
   --rndSeed=<rs>      Random Seed for Art. If None, then randomly set.
@@ -35,7 +39,10 @@ Options:
   --version           Show version.
 
 Description:
-  Simulating reads for each taxon in each synthetic community
+  Simulating reads for each taxon in each synthetic community.
+  Read types (simulator): 
+    * Illumina (ART)
+    * PacBio (SimLord)
 
   abund_table
   -----------
@@ -95,20 +102,33 @@ def main(args):
         art_params.pop('--paired', None)
     if int(art_params['--mflen']) <= 0:
         art_params.pop('--mflen', None)
+    ## simlord params
+    sl_params = {'--min-readlength' : args['--pb-min-len']}
     ### random seed
     if args['--rndSeed'] is None or args['--rndSeed'] == 'None':
         rndSeed = None
     else:
         rndSeed = int(args['--rndSeed'])
     ## read simulate
-    SimReads.sim_illumina(sample_taxon,
-                          output_dir=args['<output_dir>'],
-                          seq_depth=float(args['--sr-seq-depth']),
-                          art_params=art_params,
-                          temp_dir=args['--tmp-dir'],
-                          nproc=int(float(args['-n'])),
-                          rndSeed=rndSeed,
-                          debug=args['--debug'])
+    ### illumina
+    if float(args['--sr-seq-depth']) > 0:
+        SimReads.sim_illumina(sample_taxon,
+                              output_dir=args['<output_dir>'],
+                              seq_depth=float(args['--sr-seq-depth']),
+                              art_params=art_params,
+                              temp_dir=args['--tmp-dir'],
+                              nproc=int(float(args['-n'])),
+                              rndSeed=rndSeed,
+                              debug=args['--debug'])
+    ### pacbio
+    if float(args['--pb-seq-depth']) > 0:
+        SimReads.sim_pacbio(sample_taxon,
+                            output_dir=args['<output_dir>'],
+                            seq_depth=float(args['--pb-seq-depth']),
+                            sl_params=sl_params,
+                            temp_dir=args['--tmp-dir'],
+                            nproc=int(float(args['-n'])),
+                            debug=args['--debug'])
     
 def opt_parse(args=None):
     if args is None:        
