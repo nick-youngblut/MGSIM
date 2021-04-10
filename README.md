@@ -11,7 +11,6 @@ Metagenome read simulation of multiple synthetic communities
 - [INSTALLATION](#installation)
 - [TUTORIALS](#tutorials)
 - [SIMULATION WORKFLOW](#simulation_workflow)
-- [CHANGE LOG](#changelog)
 - [LICENSE](#license)
 
 
@@ -19,6 +18,27 @@ Metagenome read simulation of multiple synthetic communities
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3696891.svg)](https://doi.org/10.5281/zenodo.3696891)
 
+# DESCRIPTION
+
+Straight-forward simulations of metagenome data from a
+collection of reference bacterial/archaeal genomes. 
+
+## Highlights
+
+* Can simulate Illumina, PacBio, and/or Nanopore reads
+  * For Illumina, synthetic long reads (read clouds) can also be simulated
+* Generate communities differing in:
+  * Sequencing depth
+  * Richness
+  * Beta diversity
+  
+The workflow:
+
+* [optional] Download reference genomes
+* Format reference genomes
+  * e.g., rename contigs
+* Simulate communities
+* Simulate reads for each community 
 
 # INSTALLATION
 
@@ -67,7 +87,7 @@ See all subcommands:
 
 ## Simulate reads for each genome in each community
 
-### Simulating Illumina reads
+### Simulating Illumina, PacBio, and/or Nanopore reads
 
 `MGSIM reads -h`
 
