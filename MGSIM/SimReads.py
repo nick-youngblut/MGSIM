@@ -6,6 +6,7 @@ import sys
 import re
 import time
 import logging
+import random
 import subprocess
 from glob import glob
 from shutil import rmtree
@@ -24,13 +25,15 @@ logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 # functions
 def tidy_taxon_names(x):
-    """Remove special characters from taxon names
+    """
+    Remove special characters from taxon names
     """
     x = re.sub(r'[()\/:;, ]+', '_', x)
     return x
 
 def load_genome_table(in_file, nproc=1):
-    """Loading genome table
+    """
+    Load genome table
     Parameters
     ----------
     in_file : str
@@ -59,7 +62,8 @@ def load_genome_table(in_file, nproc=1):
     return df
 
 def _genome_size(x):
-    """Get the total bp for the genome sequence of all genomes
+    """
+    Get the total bp for the genome sequence of all genomes
         
     Parameters
     ----------
@@ -72,7 +76,8 @@ def _genome_size(x):
     return bp
 
 def load_abund_table(in_file):
-    """Loading abundance table
+    """
+    Load abundance table
     Parameters
     ----------
     in_file : str
@@ -92,7 +97,8 @@ def load_abund_table(in_file):
     return df
 
 def sample_taxon_list(genome_table, abund_table):
-    """Creating [sample,taxon] list of lists
+    """
+    Create [sample,taxon] list of lists
     Parameters
     ----------
     genome_table : pd.DataFrame
@@ -109,7 +115,8 @@ def sample_taxon_list(genome_table, abund_table):
 
 def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
                  temp_dir, nproc=1, rndSeed=None, debug=False):
-    """Simulate illumina reads
+    """
+    Simulate illumina reads
     Parameters
     ----------
     sample_taxon : list
@@ -127,6 +134,10 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
     debug : bool
         Debug mode
     """
+    # setting seed (also passed to read simulator)
+    if rndSeed is not None:
+        random.seed(rndSeed)
+        
     # check that simulator exists
     exe = 'art_illumina'
     if find_executable(exe) == '':
@@ -198,7 +209,8 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
                 logging.info('File written: {}'.format(file_name))
 
 def sim_art(x, art_params, temp_dir, rndSeed=None, debug=False):
-    """Simulate illumina reads
+    """
+    Simulate illumina reads
     Parameters
     ----------
     x : list
@@ -255,7 +267,8 @@ def sim_art(x, art_params, temp_dir, rndSeed=None, debug=False):
         raise ValueError(msg)
    
 def combine_reads_by_sample(sample, fq_files, temp_dir, file_prefix, output_dir, debug=False):
-    """ Concat all sample-taxon read files into per-sample read files
+    """
+    Concat all sample-taxon read files into per-sample read files
     Parameters
     ----------
     sample : str
@@ -290,7 +303,8 @@ def combine_reads_by_sample(sample, fq_files, temp_dir, file_prefix, output_dir,
     return [R1_files, R2_files]
         
 def _combine_reads(read_files, output_dir, output_file):
-    """Combine fastq read files into 1 read file.
+    """
+    Combine fastq read files into 1 read file.
     Parameters
     ----------
     read_files : list

@@ -76,6 +76,7 @@ Description:
 from docopt import docopt
 import sys,os
 import logging
+import random
 ## application
 from MGSIM.SimComms import SimComms
 ## logging

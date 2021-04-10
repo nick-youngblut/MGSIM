@@ -71,7 +71,7 @@ See all subcommands:
 
 `MGSIM reads -h`
 
-### Simulating haplotagging reads
+### Simulating haplotagging reads (aka read-cloud data)
 
 `MGSIM ht_reads -h`
 

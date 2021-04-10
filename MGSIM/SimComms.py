@@ -24,7 +24,8 @@ from Bio import SeqIO
 
 # utility functions
 def str2dict(s):
-    """Parsing string (format: 'item:value,item:value')
+    """
+    Parsing string (format: 'item:value,item:value')
     to create a dict object.    
     """    
     if hasattr(s, 'split'):
@@ -38,7 +39,8 @@ def str2dict(s):
         return s
                 
 def random_insert_seq(l, seq):
-    """Insert seq items at random locations in list.
+    """
+    Insert seq items at random locations in list.
 
     Paramters
     ---------
@@ -60,10 +62,10 @@ def random_insert_seq(l, seq):
 def power_neg(*args, **kwargs):
     return 1 - np.random.power(*args, **kwargs)
 
-    
-    
+        
 class _Comm(object):
-    """Parent class for other classes in the module.
+    """
+    Parent class for other classes in the module.
     """
     def __init__(self):
         pass
@@ -91,7 +93,8 @@ class _Comm(object):
 
 
 class SimComms(_Comm):
-    """Class for simulating taxon count data of communities.
+    """
+    Class for simulating taxon count data of communities.
     """
     def __init__(self, taxon_list, perm_perc, shared_perc,
                  richness, abund_dist, abund_dist_params,
@@ -104,6 +107,8 @@ class SimComms(_Comm):
         """
         _Comm.__init__(self, *args, **kwargs)
 
+        self.rnd_seed = rnd_seed
+        self._set_seed()
         self._load_taxon_list(taxon_list)        
         self.perm_perc = perm_perc
         self.shared_perc = shared_perc
@@ -112,10 +117,6 @@ class SimComms(_Comm):
         self.abund_dist_params = str2dict(abund_dist_params)
         self.config = config
         self.n_comm = n_comm
-        self.rnd_seed = rnd_seed
-
-        if not self.rnd_seed is None and self.rnd_seed != 'None':
-            random.seed(int(self.rnd_seed))
         
         # loading config; setting community parameters
         if config is not None:
@@ -131,9 +132,19 @@ class SimComms(_Comm):
 
         # shared taxa
         self._set_shared_taxa()
-                            
+
+    def _set_seed(self):
+        """
+        setting random seed
+        """
+        if not self.rnd_seed is None and self.rnd_seed != 'None':
+            self.rnd_seed = int(self.rnd_seed)
+            random.seed(self.rnd_seed)
+            np.random.seed(self.rnd_seed)
+        
     def _get_configspec(self, strIO=True):
-        """Return configspec set for instance.
+        """
+        Return configspec set for instance.
         Parameters
         ----------
         strIO : bool
@@ -165,7 +176,8 @@ class SimComms(_Comm):
         return ConfigObj(self.config, configspec=configspec)        
         
     def _set_comm_params(self):
-        """Setting community-specific params including applying global params.
+        """
+        Setting community-specific params including applying global params.
         """
         # adding to comm params if not enough set by config
         n_config_comms = len(self.comm_params.keys())
@@ -188,13 +200,15 @@ class SimComms(_Comm):
             v['abund_dist_p'] = str2dict(v['abund_dist_p'])
                 
     def _set_shared_taxa(self):
-        """A list of taxa shared among all communities.
+        """
+        Set a list of taxa shared among all communities.
         The taxon list (pool) is reduced to just unshared taxa.
         """
         self.shared_taxa = self._drawFromTaxonPool(self.n_shared)
         
     def _load_taxon_list(self, fileName):
-        """Loading taxon list file. Taxa order is randomly shuffled.
+        """
+        Loading taxon list file. Taxa order is randomly shuffled.
         
         Parameters
         ----------
@@ -223,7 +237,8 @@ class SimComms(_Comm):
             self.genome_fasta[x['Taxon']] = x['Fasta']
         
     def _drawFromTaxonPool(self, n):
-        """Draw from taxon pool, returning n-taxa;
+        """
+        Draw from taxon pool, returning n-taxa;
         those taxa are removed from the pool.
 
         Parameters
@@ -243,7 +258,8 @@ class SimComms(_Comm):
 
 
     def _lower_richness(self):
-        """Lowering the richness of each community if the number of
+        """
+        Lowering the richness of each community if the number of
         unique taxa (un-shared) + shared taxa is greater than the taxon
         pool from which to draw taxa.
         """
@@ -274,7 +290,8 @@ class SimComms(_Comm):
         self._n_shared = None
                
     def make_comm(self, comm_id):
-        """Make a Comm object.
+        """
+        Make a Comm object.
         
         Parameters
         ----------
@@ -296,7 +313,8 @@ class SimComms(_Comm):
         self.comms[comm_id] = Comm(comm_id, self)
         
     def write_comm_table(self, out_file=None, Long=True):
-        """Joining comm objects into 1 dataframe and printing.
+        """
+        Joining comm objects into 1 dataframe and printing.
         Writing table to STDOUT.
 
         Parameters
@@ -346,7 +364,8 @@ class SimComms(_Comm):
                       float_format='%.9f', index=write_index)            
 
     def weighted_abundances(self):
-        """Calculate weighted abundance: rel_abund * genome_size
+        """
+        Calculate weighted abundance: rel_abund * genome_size
         
         Parameters
         ----------
@@ -363,7 +382,8 @@ class SimComms(_Comm):
             self.comms[comm_id].taxa = pd.Series(w_abunds)
             
     def _set_genome_sizes(self):
-        """Get the total bp for the genome sequence of all genomes
+        """
+        Get the total bp for the genome sequence of all genomes
         
         Parameters
         ----------
@@ -375,7 +395,8 @@ class SimComms(_Comm):
                 self.genome_sizes[taxon] += len(record.seq)        
 
     def beta_diversity(self, measures=['braycurtis'], outfile=None):
-        """Calculate weighted abundance: rel_abund * genome_size
+        """
+        Calculate weighted abundance: rel_abund * genome_size
         
         Parameters
         ----------
@@ -414,7 +435,8 @@ class SimComms(_Comm):
                 
     @staticmethod
     def permute(comm, perm_perc):
-        """Permute a certain percentage of the taxa abundances.
+        """
+        Permute a certain percentage of the taxa abundances.
         Permuting just the indices of the series objects.
         In-place edit of comm table
 
@@ -490,7 +512,8 @@ class SimComms(_Comm):
 
     @property
     def min_richness(self):
-        """The minimum richness of any community as defined by comm_params.
+        """
+        The minimum richness of any community as defined by comm_params.
         """
         if not hasattr(self, '_min_richness'):
             setattr(self, '_min_richness', None)
@@ -507,7 +530,8 @@ class SimComms(_Comm):
 
     @property
     def n_shared(self):
-        """The number of taxa that should be shared;
+        """
+        The number of taxa that should be shared;
         defined by shared_perc * min richness of any community.
         """
         if not hasattr(self, '_n_shared'):
@@ -519,7 +543,8 @@ class SimComms(_Comm):
 
     @property
     def n_taxa_remaining(self):
-        """The number of taxa that remain in taxa pool.
+        """
+        The number of taxa that remain in taxa pool.
         """
         if not hasattr(self, '_n_taxa_remaining'):
             setattr(self, '_n_taxa_remaining', None)
