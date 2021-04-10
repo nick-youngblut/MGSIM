@@ -17,13 +17,13 @@ from MGSIM.Commands import Reads as Reads_CMD
 test_dir = os.path.join(os.path.dirname(__file__))
 data_dir = os.path.join(test_dir, 'data')
 
-def validate_fastq(data_dir, paired=True):
+def validate_fastq(data_dir, paired=True, seq_type='illumina'):
     # validating fastq
-    output_R = os.path.join(data_dir, 'TEST', '1', 'R1.fq')
+    output_R = os.path.join(data_dir, 'TEST', seq_type, '1', 'R1.fq')
     ret = subprocess.run(['fqtools', 'validate', output_R])
     assert ret.returncode == 0
     if paired is True:
-        output_R = os.path.join(data_dir, 'TEST', '1', 'R2.fq')
+        output_R = os.path.join(data_dir, 'TEST', seq_type, '1', 'R2.fq')
         ret = subprocess.run(['fqtools', 'validate', output_R])
         assert ret.returncode == 0
 
@@ -73,7 +73,7 @@ def test_main_unpaired(script_runner):
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir, False)
+    validate_fastq(data_dir, paired=False)
 
 def test_main_pacbio(script_runner):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
@@ -90,3 +90,4 @@ def test_main_pacbio(script_runner):
                             genomeList, abund_table, output_prefix)
     assert ret.success
     validate_fastq(data_dir)
+    validate_fastq(data_dir, paired=False, seq_type='pacbio')
