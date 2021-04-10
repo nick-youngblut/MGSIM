@@ -268,7 +268,7 @@ def sim_art(x, art_params, temp_dir, rndSeed=None, debug=False):
         raise ValueError(msg)
    
 def combine_reads_by_sample(sample, fq_files, temp_dir, file_prefix, output_dir,
-                            debug=False):
+                            read_type='fastq', debug=False):
     """
     Concat all sample-taxon read files into per-sample read files
     Parameters
@@ -297,14 +297,16 @@ def combine_reads_by_sample(sample, fq_files, temp_dir, file_prefix, output_dir,
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
     ## read1
-    R1_files = _combine_reads(R1_files, output_dir, 'R1.fq')
+    R1_files = _combine_reads(R1_files, output_dir, 'R1',
+                              read_type=read_type)
     ## read2
     if R2_files is not None:
-        R2_files = _combine_reads(R2_files, output_dir, 'R2.fq')
+        R2_files = _combine_reads(R2_files, output_dir, 'R2',
+                                  read_type=read_type)
 
     return [R1_files, R2_files]
         
-def _combine_reads(read_files, output_dir, output_file):
+def _combine_reads(read_files, output_dir, output_file, read_type='fastq'):
     """
     Combine fastq read files into 1 read file.
     Parameters
@@ -316,16 +318,23 @@ def _combine_reads(read_files, output_dir, output_file):
     output_file : str
         Output file path
     """
-    output_file = os.path.join(output_dir, output_file)
+    if read_type == 'fastq':
+        suffix = '.fq'
+    elif read_type == 'fasta':
+        suffix = '.fa'
+    else:
+        msg = 'Cannot determine suffix for read type: {}'
+        raise ValueError(msg.format(read_type))    
+    output_file = os.path.join(output_dir, output_file + suffix)
     with open(output_file, 'w') as outFH:
         for in_file in read_files:
             taxon = os.path.split(os.path.split(in_file)[0])[1]
-            for i,record in enumerate(SeqIO.parse(in_file, 'fastq')):
+            for i,record in enumerate(SeqIO.parse(in_file, read_type)):
                 # renaming fastq read
                 name =  '{}__SEQ{}'.format(taxon, i)
                 record.id = name
                 record.description = name
-                SeqIO.write(record, outFH, 'fastq')
+                SeqIO.write(record, outFH, read_type)
             # delete temporary file
             os.remove(in_file)
 
@@ -464,4 +473,136 @@ def sim_simlord(x, sl_params, temp_dir, debug=False):
         return [community, R0_file]
     else:
         msg = 'Cannot find simlord output fastq file!'
+        raise ValueError(msg)
+
+def sim_nanopore(sample_taxon, output_dir, seq_depth, ns_params,
+                 temp_dir, nproc=1, debug=False):
+    """
+    Simulate nanopore reads
+    Parameters
+    ----------
+    sample_taxon : list
+        [Community,Taxon,Genome_size,Fasta,Perc_rel_abund,Fold]
+    output_dir : str
+        Output director for all read files
+    seq_depth : int
+        Sequencing depth per sample
+    ns_params : dict
+        Parameters provided to NanoSim-H
+    temp_dir : str
+        Temporary file directory
+    nproc : int
+        Number of parallel processes
+    debug : bool
+        Debug mode
+    """
+    # check that simulator exists
+    exe = 'nanosim-h'
+    if find_executable(exe) == '':
+        raise IOError('Cannot find executable: {}'.format(exe))
+    
+    # calculating fraction of total reads to simulate
+    for x in sample_taxon:
+        perc_rel_abund = float(x[4])
+        x.append(int(perc_rel_abund / 100.0 * seq_depth))
+
+    # directories
+    ## temp dir
+    if not os.path.isdir(temp_dir):
+        os.makedirs(temp_dir)
+    ## output dir
+    output_dir = os.path.join(output_dir, 'nanopore')
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+        
+    # simulate per sample
+    logging.info('Simulating Nanopore reads...')
+    func = partial(sim_nanosim,
+                   ns_params=ns_params,
+                   temp_dir=temp_dir,
+                   debug=debug)
+    if debug is True:
+        fq_files = map(func, sample_taxon)
+    else:
+        p = Pool(nproc)
+        fq_files = p.map(func, sample_taxon)
+    fq_files = list(fq_files)
+
+    # combining all reads by sample
+    logging.info('Combining simulated reads by sample...')    
+    comms = list(set([x[0] for x in sample_taxon]))
+    func = partial(combine_reads_by_sample,
+                   fq_files=fq_files,
+                   temp_dir=temp_dir,
+                   file_prefix='nanopore',
+                   output_dir=output_dir,
+                   read_type='fasta',
+                   debug=debug)
+    if debug is True:
+        res = map(func, comms)
+    else:
+        p = Pool(nproc)
+        res = p.map(func, comms)
+    res = list(res)
+
+    # removing temp dir
+    logging.info('Removing temp directory...')
+    rmtree(temp_dir)
+    
+    # status
+    for sample_list in res:
+        for file_name in sample_list:
+            if file_name is not None:
+                logging.info('File written: {}'.format(file_name))
+
+def sim_nanosim(x, ns_params, temp_dir, debug=False):
+    """
+    Simulate nanopore reads with NanoSim-H
+    Parameters
+    ----------
+    x : list
+        [Community,Taxon,Genome_size,Fasta,Perc_rel_abund,Fold]
+    """
+    community = str(x[0])
+    taxon = str(x[1])
+    fasta = str(x[3])
+    perc_rel_abund = float(x[4])
+    n_reads = float(x[5])
+    
+    # output
+    ## temporary directories
+    out_dir = os.path.join(temp_dir, str(community), taxon)
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+    ## temporary files
+    output_prefix = os.path.join(out_dir, 'nanopore')
+    
+    # art command
+    ns_params = ' '.join(['{} {}'.format(k,v) for k,v in ns_params.items()])
+    cmd = 'nanosim-h {ns_params} --circular --number {n_reads}'
+    cmd += ' --out-pref {output_prefix} {input}'
+    cmd = cmd.format(ns_params=ns_params,
+                     n_reads=int(n_reads),
+                     input=fasta,
+                     output_prefix=output_prefix)
+    
+    ## system call
+    if debug is True:
+        sys.stderr.write('CMD: ' + cmd + '\n')
+    try:
+        res = subprocess.run(cmd, check=True, shell=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        raise e
+    if debug is True:
+        sys.stderr.write(res.stderr.decode() + '\n')
+        sys.stderr.write(res.stdout.decode() + '\n')
+        
+    # check that files have been created
+    R0_file = output_prefix + '.fa'
+    if os.path.isfile(R0_file):
+        return [community, R0_file]
+    else:
+        msg = 'Cannot find nanosim-h output fasta file!'
         raise ValueError(msg)

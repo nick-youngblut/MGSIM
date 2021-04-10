@@ -28,6 +28,12 @@ Options:
                       [Default: 0]
   --pb-min-len=<ml>   Minimum read length for PacBio reads.
                       [Default: 500]  
+  --np-seq-depth=<d>  Number of Nanopore reads per sample.
+                      [Default: 0]
+  --np-min-len=<ml>   Minimum read length for Nanopore reads.
+                      [Default: 500]  
+  --np-error=<ml>     NanoSim-H error profile
+                      [Default: 'ecoli_R9_1D']  
   --tmp-dir=<td>      Temporary directory
                       [Default: .sim_reads]
   --rndSeed=<rs>      Random Seed for Art. If None, then randomly set.
@@ -43,6 +49,7 @@ Description:
   Read types (simulator): 
     * Illumina (ART)
     * PacBio (SimLord)
+    * Nanopore (NanoSim-H)
 
   abund_table
   -----------
@@ -104,6 +111,9 @@ def main(args):
         art_params.pop('--mflen', None)
     ## simlord params
     sl_params = {'--min-readlength' : args['--pb-min-len']}
+    ## nanosim-h params
+    ns_params = {'--min-len' : args['--np-min-len'],
+                 '--profile' : args['--np-error']}
     ### random seed
     if args['--rndSeed'] is None or args['--rndSeed'] == 'None':
         rndSeed = None
@@ -129,6 +139,15 @@ def main(args):
                             temp_dir=args['--tmp-dir'],
                             nproc=int(float(args['-n'])),
                             debug=args['--debug'])
+    ### nanopore
+    if float(args['--np-seq-depth']) > 0:
+        SimReads.sim_nanopore(sample_taxon,
+                              output_dir=args['<output_dir>'],
+                              seq_depth=float(args['--np-seq-depth']),
+                              ns_params=ns_params,
+                              temp_dir=args['--tmp-dir'],
+                              nproc=int(float(args['-n'])),
+                              debug=args['--debug'])
     
 def opt_parse(args=None):
     if args is None:        
