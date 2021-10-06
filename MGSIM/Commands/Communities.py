@@ -37,6 +37,11 @@ Options:
   --beta-div=<m>...   beta-diversity measures to calculate among communities.
                       See scipy.spatial.distance for options.
                       [default: braycurtis jaccard]
+  --group-bias=<gb>   Taxa in the group are more/less likely to have similar abundances.
+                      Range of -1 to 1, with intra-group bias for negative values and
+                      inter-group bias for positive values. Values closer to abs(gb) 
+                      will be more biased.
+                      [default: 0]
   --config=<c>        Config file for setting community-specific parameters
                       (& global params).
                       Community-specific parameters can include:
@@ -59,6 +64,8 @@ Description:
   * must contain 2 columns
     * "Taxon" = taxon name
     * "Fasta" = genome fasta file path
+  * optional columns
+    * "Group" = See the --group-bias parameter
   * other columns are allowed
 
   Output
@@ -92,6 +99,7 @@ def main(uargs):
                   abund_dist = uargs['--abund-dist'],
                   abund_dist_params = uargs['--abund-dist-p'],
                   n_comm = uargs['--n-comm'],
+                  group_bias = uargs['--group-bias'],
                   config = uargs['--config'],
                   rnd_seed = uargs['--rnd-seed'])
     

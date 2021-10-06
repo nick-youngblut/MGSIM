@@ -71,9 +71,13 @@ def sim_barcode_reads(barcodes, genome_table, abund_table, out_files,
         --rndSeed for ART
     debug: bool
         Debug mode
-    """
+    """    
     # taxon abundance table of community of interest
     genome_table = genome_table.merge(abund_table,on=['Taxon'])
+    if genome_table.shape[0] == 0:
+        msg = 'No "Taxon" values matched between the genome and abundance tables'
+        raise ValueError(msg)
+
     ## filtering out zeros
     genome_table = genome_table[genome_table['Perc_rel_abund'] > 0].reset_index()
     

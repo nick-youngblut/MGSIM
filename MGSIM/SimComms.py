@@ -90,7 +90,7 @@ class _Comm(object):
         self._richness = int(round(x,0))
         if self._richness < 1:
             self._richness = 1
-
+            
 
 class SimComms(_Comm):
     """
@@ -98,7 +98,7 @@ class SimComms(_Comm):
     """
     def __init__(self, taxon_list, perm_perc, shared_perc,
                  richness, abund_dist, abund_dist_params,
-                 n_comm, config=None, rnd_seed=None,
+                 n_comm, group_bias=0, config=None, rnd_seed=None,
                  *args, **kwargs):
         """
         Parameters
@@ -115,6 +115,7 @@ class SimComms(_Comm):
         self.richness = richness
         self.abund_dist = abund_dist
         self.abund_dist_params = str2dict(abund_dist_params)
+        self.group_bias = group_bias
         self.config = config
         self.n_comm = n_comm
         
@@ -227,6 +228,12 @@ class SimComms(_Comm):
             diff = ','.join(diff)
             raise ValueError('Cannot find table columns:{}'.format(diff))
 
+        # setting group (if available)
+        if 'Group' in df.columns:
+            self.group = df.loc[:,['Taxon', 'Group']]
+        else:
+            self.group = None
+        
         # setting taxon_pool
         self.taxon_pool = df['Taxon']
         random.shuffle(self.taxon_pool)
@@ -235,6 +242,7 @@ class SimComms(_Comm):
         self.genome_fasta = {}
         for i,x in df.iterrows():
             self.genome_fasta[x['Taxon']] = x['Fasta']
+
         
     def _drawFromTaxonPool(self, n):
         """
@@ -511,6 +519,21 @@ class SimComms(_Comm):
         self._shared_perc = x
 
     @property
+    def group_bias(self):
+        return self._group_bias
+    @group_bias.setter
+    def group_bias(self, x):
+        try:
+            x = float(x)
+        except ValueError:
+            raise ValueError('group_bias must be a float')
+        if x < -1:
+            x = -1.0
+        if x > 1:
+            x = 1.0
+        self._group_bias = x
+        
+    @property
     def min_richness(self):
         """
         The minimum richness of any community as defined by comm_params.
@@ -567,8 +590,10 @@ class Comm(_Comm):
         self.params = Comms.comm_params[comm_id]
         self.n_shared = Comms.n_shared
         self.taxon_pool = Comms.taxon_pool
+        self.group = Comms.group
+        self.group_bias = Comms.group_bias
         self.richness = self.params['richness']
-
+        
         # assertions
         if self.richness > self.n_shared + Comms.n_taxa_remaining:
             sys.exit('ERROR: Comm_ID {}\n'\
@@ -585,14 +610,38 @@ class Comm(_Comm):
             'of unique taxa is < 0'.format(comm_id)
         self.taxa = random_insert_seq(Comms.shared_taxa,
                                       Comms._drawFromTaxonPool(n_unique))
-
         
         # drawing relative abundances from the user-defined distribution
         abund_dist = self._get_abund_dist(self.params['abund_dist'],
                                           self.params['abund_dist_p'])        
         rel_abunds = abund_dist(size=self.n_taxa)
         rel_abunds = np.sort(rel_abunds / sum(rel_abunds) * 100)[::-1]
-    
+        
+        # biasing to groupings
+        if self.group_bias != 0 and self.group is not None:
+            # getting groups for taxa
+            groups = self.group.loc[self.group['Taxon'].isin(self.taxa)]
+            if groups.shape[0] != len(self.taxa):
+                raise ValueError('Not all taxa found in groups!')
+            # ordering by groups
+            if self.group_bias > 0:
+                self.taxa = groups.sort_values(by=['Group']).Taxon
+            else:
+                def add_cnt(df):
+                    df['Group_iter'] = range(df.shape[0])
+                    return df
+                groups = groups.groupby(by=['Group']).apply(add_cnt)
+                self.taxa = groups.sort_values(by=['Group_iter']).Taxon
+            # shuffle
+            def shuf_iter(s):
+                x = random.randrange(0,len(s))
+                y = random.randrange(0,len(s))
+                s[x],s[y] = s[y],s[x]
+                return s
+            n = int(len(self.taxa) * (1 - abs(self.group_bias)))
+            for i in range(n):
+                self.taxa = shuf_iter(self.taxa)
+                
         # making a series for the taxa
         self.taxa = pd.Series(rel_abunds, index=self.taxa)        
 
