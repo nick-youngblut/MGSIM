@@ -59,6 +59,7 @@ See the `conda install` line in the [CI yaml](.github/workflows/pythonpackage.ym
 ## Testing
 
 * conda-forge::pytest
+* conda-forge::pytest-console-scripts
 
 In the MGSIM base directory, use the command `pytest` to
 run all of the tests.

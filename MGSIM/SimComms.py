@@ -634,6 +634,10 @@ class Comm(_Comm):
                 self.taxa = groups.sort_values(by=['Group_iter']).Taxon
             # shuffle
             def shuf_iter(s):
+                try:
+                    s = s.tolist()
+                except AttributeError:
+                    pass
                 x = random.randrange(0,len(s))
                 y = random.randrange(0,len(s))
                 s[x],s[y] = s[y],s[x]
@@ -641,6 +645,7 @@ class Comm(_Comm):
             n = int(len(self.taxa) * (1 - abs(self.group_bias)))
             for i in range(n):
                 self.taxa = shuf_iter(self.taxa)
+            self.taxa = pd.Series(self.taxa)
                 
         # making a series for the taxa
         self.taxa = pd.Series(rel_abunds, index=self.taxa)        
