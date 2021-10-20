@@ -654,14 +654,17 @@ class Comm(_Comm):
         return self.taxa.__repr__()
         
     def _get_abund_dist(self, dist, params):
+        """
+        Getting abundance distribution. 
+        Using numpy distribution functions.
+        Distribution params can be provided.
+        """
         try:
             distFunc = getattr(np.random, dist)
         except AttributeError:
             msg = 'Distribution "{}" is not supported'.format(dist)
-
         if dist == 'power':
             distFunc = power_neg
-                        
         try:
             return partial(distFunc, **params)
         except TypeError:

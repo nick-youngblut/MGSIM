@@ -49,6 +49,7 @@ def load_genome_table(in_file, nproc=1):
         raise ValueError('Cannot find table columns: {}'.format(diff))
 
     # getting genome sizes
+    logging.info('  Getting genome sizes (no. of threads: {})'.format(nproc))
     if nproc > 1:
         p = Pool(nproc)
         df['Genome_size'] = p.map(_genome_size, [x for i,x in df.iterrows()])
