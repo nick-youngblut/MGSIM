@@ -91,9 +91,13 @@ logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 def main(args):
     # load tables
-    genome_table = SimReads.load_genome_table(args['<genome_table>'])
+    logging.info('Reading genome table: {}'.format(args['<genome_table>']))
+    genome_table = SimReads.load_genome_table(args['<genome_table>'],
+                                              nproc=int(float(args['-n'])))
+    logging.info('Reading abundance table: {}'.format(args['<abund_table>']))
     abund_table = SimReads.load_abund_table(args['<abund_table>'])
     # create pairwise
+    logging.info('Creating sample-taxon list...')
     sample_taxon = SimReads.sample_taxon_list(genome_table,
                                               abund_table)
     # simulating reads
