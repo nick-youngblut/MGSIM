@@ -17,13 +17,13 @@ from MGSIM.Commands import Reads as Reads_CMD
 test_dir = os.path.join(os.path.dirname(__file__))
 data_dir = os.path.join(test_dir, 'data')
 
-def validate_fastq(data_dir, paired=True, seq_type='illumina', suffix='.fq'):
+def validate_fastq(out_dir, paired=True, seq_type='illumina', suffix='.fq'):
     # validating fastq
-    output_R = os.path.join(data_dir, 'TEST', seq_type, '1', 'R1' + suffix)
+    output_R = os.path.join(out_dir, seq_type, '1', 'R1' + suffix)
     ret = subprocess.run(['fqtools', 'validate', output_R])
     assert ret.returncode == 0
     if paired is True:
-        output_R = os.path.join(data_dir, 'TEST', seq_type, '1', 'R2' + suffix)
+        output_R = os.path.join(out_dir, seq_type, '1', 'R2' + suffix)
         ret = subprocess.run(['fqtools', 'validate', output_R])
         assert ret.returncode == 0
 
@@ -44,7 +44,7 @@ def test_main(script_runner, tmp_path):
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir)
+    validate_fastq(output_prefix)
 
 def test_main_multiProc(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
@@ -59,7 +59,7 @@ def test_main_multiProc(script_runner, tmp_path):
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir)
+    validate_fastq(output_prefix)
 
 def test_main_unpaired(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
@@ -73,7 +73,7 @@ def test_main_unpaired(script_runner, tmp_path):
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir, paired=False)
+    validate_fastq(output_prefix, paired=False)
 
 def test_main_low_qual(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
@@ -88,7 +88,7 @@ def test_main_low_qual(script_runner, tmp_path):
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir, paired=False)
+    validate_fastq(output_prefix, paired=False)
 
 def test_main_art_error_profiles(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
@@ -106,7 +106,7 @@ def test_main_art_error_profiles(script_runner, tmp_path):
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir, paired=False)
+    validate_fastq(output_prefix, paired=False)
     
 def test_main_pacbio(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
@@ -122,8 +122,8 @@ def test_main_pacbio(script_runner, tmp_path):
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir)
-    validate_fastq(data_dir, paired=False, seq_type='pacbio')
+    validate_fastq(output_prefix)
+    validate_fastq(output_prefix, paired=False, seq_type='pacbio')
 
 def test_main_nanopore(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
@@ -139,5 +139,5 @@ def test_main_nanopore(script_runner, tmp_path):
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(data_dir)
-    validate_fastq(data_dir, paired=False, seq_type='nanopore', suffix='.fa')
+    validate_fastq(output_prefix)
+    validate_fastq(output_prefix, paired=False, seq_type='nanopore', suffix='.fa')
