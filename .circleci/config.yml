@@ -1,5 +1,6 @@
 version: 2.1
 jobs:
+  build-and-test:
     docker:
       - image: ubuntu:bionic
     environment:
@@ -7,23 +8,22 @@ jobs:
     steps:
       - checkout       
       - run:
-        name: miniconda setup
-        command: |
-          wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-          bash miniconda.sh -b -p $HOME/miniconda
+          name: miniconda setup
+          command: |
+            wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+            bash miniconda.sh -b -p $HOME/miniconda
       - run:
-        name: conda env setup
-        command: |
-          export PATH="$HOME/miniconda/bin:$PATH"
-          conda update --yes conda
-          conda install --yes mamba
-          mamba install python=$PYTHON_VERSION numpy pandas docopt scipy biopython art pyfasta pytest
+          name: conda env setup
+          command: |
+            export PATH="$HOME/miniconda/bin:$PATH"
+            conda update --yes conda
+            conda install --yes mamba
+            mamba install python=$PYTHON_VERSION numpy pandas docopt scipy biopython art pyfasta pytest
       - run:
-        name: pytest
-        command: pytest -s
-
+          name: pytest
+          command: pytest -s
 workflows:
-  sample:
+  sample: # This is the name of the workflow, feel free to change it to better match your workflow.
+    # Inside the workflow, you define the jobs you want to run.
     jobs:
       - build-and-test
-
