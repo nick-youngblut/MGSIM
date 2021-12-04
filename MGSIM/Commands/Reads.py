@@ -24,6 +24,14 @@ Options:
                       [Default: 10]
   --art-seqSys=<as>   art_illumina --seqSys parameter.
                       [Default: HS25]
+  --art-minQ=<aq>     art_illumina --minQ parameter.
+                      [Default: None]
+  --art-maxQ=<amq>    art_illumina --maxQ parameter.
+                      [Default: None]
+  --art-qprof1=<aq1>  art_illumina --qprof1 parameter.
+                      [Default: None]
+  --art-qprof2=<aq2>  art_illumina --qprof2 parameter.
+                      [Default: None]
   --pb-seq-depth=<d>  Number of PacBio reads per sample.
                       [Default: 0]
   --pb-min-len=<ml>   Minimum read length for PacBio reads.
@@ -89,7 +97,7 @@ from MGSIM import SimReads
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 
-def main(args):
+def main(args):    
     # load tables
     logging.info('Reading genome table: {}'.format(args['<genome_table>']))
     genome_table = SimReads.load_genome_table(args['<genome_table>'],
@@ -100,6 +108,7 @@ def main(args):
     logging.info('Creating sample-taxon list...')
     sample_taxon = SimReads.sample_taxon_list(genome_table,
                                               abund_table)
+    
     # simulating reads
     ## art params
     art_params = {'--paired' : args['--art-paired'],
@@ -107,12 +116,31 @@ def main(args):
                   '--mflen' : float(args['--art-mflen']),
                   '--sdev' : float(args['--art-sdev']),
                   '--seqSys' : args['--art-seqSys']}
+    ### paired reads
     if art_params['--paired'] is True:
         art_params['--paired'] = ''
     else:
         art_params.pop('--paired', None)
+    ### read length
     if int(art_params['--mflen']) <= 0:
         art_params.pop('--mflen', None)
+    ### minQ
+    try:
+        art_params['--minQ'] = int(args['--art-minQ'])
+    except ValueError:
+        pass
+    ### maxQ
+    try:
+        art_params['--maxQ'] = int(args['--art-maxQ'])
+    except ValueError:
+        pass
+    ### qprof
+    for k,v in {'--art-qprof1' : '--qprof1', '--art-qprof2' : '--qprof2'}.items():
+        if args[k] != 'None' and args[k] is not None:
+            if not os.path.isfile(args[k]):
+                raise IOError('Cannot find file: {}'.format(args[k]))
+            art_params[v] = args[k]
+    
     ## simlord params
     sl_params = {'--min-readlength' : args['--pb-min-len']}
     ## nanosim-h params
@@ -123,9 +151,11 @@ def main(args):
         rndSeed = None
     else:
         rndSeed = int(args['--rndSeed'])
+        
     ## read simulate
     ### illumina
     if float(args['--sr-seq-depth']) > 0:
+        logging.info('Simulating illumina reads...')
         SimReads.sim_illumina(sample_taxon,
                               output_dir=args['<output_dir>'],
                               seq_depth=float(args['--sr-seq-depth']),
@@ -136,6 +166,7 @@ def main(args):
                               debug=args['--debug'])
     ### pacbio
     if float(args['--pb-seq-depth']) > 0:
+        logging.info('Simulating PacBio reads...')
         SimReads.sim_pacbio(sample_taxon,
                             output_dir=args['<output_dir>'],
                             seq_depth=float(args['--pb-seq-depth']),
@@ -145,6 +176,7 @@ def main(args):
                             debug=args['--debug'])
     ### nanopore
     if float(args['--np-seq-depth']) > 0:
+        logging.info('Simulating Nanopore reads...')
         SimReads.sim_nanopore(sample_taxon,
                               output_dir=args['<output_dir>'],
                               seq_depth=float(args['--np-seq-depth']),

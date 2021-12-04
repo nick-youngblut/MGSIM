@@ -115,6 +115,7 @@ def main(uargs):
     # writing out abundance table
     out_file = uargs['<prefix>'] + '_abund.txt'
     SC.write_comm_table(out_file)
+    logging.info('File written: {}'.format(out_file))
             
     # creating abundance weighted by genome length
     SC.weighted_abundances()
@@ -122,11 +123,13 @@ def main(uargs):
     # writing out weighted abundance tables
     out_file = uargs['<prefix>'] + '_wAbund.txt'
     SC.write_comm_table(out_file)
+    logging.info('File written: {}'.format(out_file))
 
     # beta-diversity among communities
     out_file = uargs['<prefix>'] + '_beta-div.txt'
     SC.beta_diversity(measures=uargs['--beta-div'], outfile=out_file)
-    
+    logging.info('File written: {}'.format(out_file))
+
         
 def opt_parse(args=None):
     if args is None:        

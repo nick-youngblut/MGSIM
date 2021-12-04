@@ -369,7 +369,7 @@ class SimComms(_Comm):
                       float_format='%.9f', index=write_index)
         else:
             df.to_csv(out_file, sep='\t', na_rep=0,
-                      float_format='%.9f', index=write_index)            
+                      float_format='%.9f', index=write_index) 
 
     def weighted_abundances(self):
         """

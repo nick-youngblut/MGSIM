@@ -75,6 +75,39 @@ def test_main_unpaired(script_runner):
     assert ret.success
     validate_fastq(data_dir, paired=False)
 
+def test_main_low_qual(script_runner):
+    genomeList = os.path.join(data_dir, 'genome_list.txt')
+    abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
+    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    output_prefix = os.path.join(data_dir, 'TEST')
+    ret = script_runner.run('MGSIM', 'reads',
+                            '--art-paired',
+                            '--art-maxQ', '25',
+                            '--tmp-dir', temp_dir,
+                            '--sr-seq-depth', '1e4',
+                            '--rndSeed', '8294',
+                            genomeList, abund_table, output_prefix)
+    assert ret.success
+    validate_fastq(data_dir, paired=False)
+
+def test_main_art_error_profiles(script_runner):
+    genomeList = os.path.join(data_dir, 'genome_list.txt')
+    abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
+    error_prof1 = os.path.join(data_dir, 'art_profiles/HiSeq2500L150R1.txt')
+    error_prof2 = os.path.join(data_dir, 'art_profiles/HiSeq2500L150R2.txt')
+    temp_dir = os.path.join(data_dir, 'temp_read_files')
+    output_prefix = os.path.join(data_dir, 'TEST')
+    ret = script_runner.run('MGSIM', 'reads',
+                            '--art-paired',
+                            '--art-qprof1', error_prof1,                            
+                            '--art-qprof2', error_prof2,
+                            '--tmp-dir', temp_dir,
+                            '--sr-seq-depth', '1e4',
+                            '--rndSeed', '8294',
+                            genomeList, abund_table, output_prefix)
+    assert ret.success
+    validate_fastq(data_dir, paired=False)
+    
 def test_main_pacbio(script_runner):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
