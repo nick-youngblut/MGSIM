@@ -2,30 +2,21 @@ version: 2.1
 jobs:
   build-and-test:
     docker:
-      - image: ubuntu:bionic
+      - image: continuumio/miniconda3
     environment:
       PYTHON_VERSION: 3.6
     steps:
-      - checkout       
-      - run:
-          name: miniconda setup
-          command: |
-            apt update
-            apt install -y wget
-            cd $HOME
-            wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-            bash miniconda.sh -b -p $HOME/miniconda
+      - checkout
       - run:
           name: conda env setup
           command: |
-            export PATH="$HOME/miniconda/bin:$PATH"
-            conda update --yes conda
             conda install -c conda-forge --yes mamba
             mamba install -c conda-forge -c bioconda python=$PYTHON_VERSION numpy pandas docopt scipy biopython art pyfasta pytest
       - run:
           name: pytest
           command: |
             conda init bash
+            source ~/.bashrc
             pytest -s
 workflows:
   sample: # This is the name of the workflow, feel free to change it to better match your workflow.
