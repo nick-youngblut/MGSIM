@@ -1,0 +1,29 @@
+version: 2.1
+jobs:
+    docker:
+      - image: ubuntu:bionic
+    environment:
+      PYTHON_VERSION: 3.6
+    steps:
+      - checkout       
+      - run:
+        name: miniconda setup
+        command: |
+          wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+          bash miniconda.sh -b -p $HOME/miniconda
+      - run:
+        name: conda env setup
+        command: |
+          export PATH="$HOME/miniconda/bin:$PATH"
+          conda update --yes conda
+          conda install --yes mamba
+          mamba install python=$PYTHON_VERSION numpy pandas docopt scipy biopython art pyfasta pytest
+      - run:
+        name: pytest
+        command: pytest -s
+
+workflows:
+  sample:
+    jobs:
+      - build-and-test
+
