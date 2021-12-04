@@ -38,7 +38,8 @@ def validate_fastq(base_dir):
 
 # tests
 def test_barcode_gen():
-    """Testing the generation of barcodes
+    """
+    Testing the generation of barcodes
     """
     n_barcodes = 1000
     barcodes = SimHtReads.barcodes(n_barcodes)
@@ -49,11 +50,11 @@ def test_help(script_runner):
     ret = script_runner.run('MGSIM', 'ht_reads', '-h')
     assert ret.success
 
-def test_main(script_runner):
+def test_main(script_runner, tmp_path):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(out_dir, 'TEST-main')
+    temp_dir = os.path.join(str(tmp_path), str(uuid.uuid4()))
+    output_prefix = os.path.join(str(tmp_path), 'TEST-main')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,
@@ -65,11 +66,11 @@ def test_main(script_runner):
     assert ret.success
     validate_fastq(output_prefix)
 
-def test_main_multi(script_runner):
+def test_main_multi(script_runner, tmp_path):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(out_dir, 'TEST-main-multi')
+    temp_dir = os.path.join(str(tmp_path), str(uuid.uuid4()))
+    output_prefix = os.path.join(str(tmp_path), 'TEST-main-multi')
     
     ret = script_runner.run('MGSIM', 'ht_reads',
                             '--art-paired', '-n', '2',
@@ -80,11 +81,11 @@ def test_main_multi(script_runner):
     assert ret.success
     validate_fastq(output_prefix)
 
-def test_main_zeros(script_runner):
+def test_main_zeros(script_runner, tmp_path):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund_zeros.txt')
-    temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(out_dir, 'TEST-main-zeros')
+    temp_dir = os.path.join(str(tmp_path), str(uuid.uuid4()))
+    output_prefix = os.path.join(str(tmp_path), 'TEST-main-zeros')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,
@@ -96,11 +97,11 @@ def test_main_zeros(script_runner):
     assert ret.success
     validate_fastq(output_prefix)
     
-def test_main_prefix(script_runner):
+def test_main_prefix(script_runner, tmp_path):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(out_dir, 'TEST-main-prefix')
+    temp_dir = os.path.join(str(tmp_path), str(uuid.uuid4()))
+    output_prefix = os.path.join(str(tmp_path), 'TEST-main-prefix')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,
@@ -113,11 +114,11 @@ def test_main_prefix(script_runner):
     assert ret.success
     validate_fastq(output_prefix)
 
-def test_main_large_frag_sd(script_runner):
+def test_main_large_frag_sd(script_runner, tmp_path):
     genome_table = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(tmp_dir, str(uuid.uuid4()))
-    output_prefix = os.path.join(out_dir, 'TEST-main-largeFragSize')
+    temp_dir = os.path.join(str(tmp_path), str(uuid.uuid4()))
+    output_prefix = os.path.join(str(tmp_path), 'TEST-main-largeFragSize')
     
     ret = script_runner.run('MGSIM', 'ht_reads', '--art-paired',
                             '--tmp-dir', temp_dir,

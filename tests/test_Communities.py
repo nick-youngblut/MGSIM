@@ -22,25 +22,25 @@ def test_help(script_runner):
     ret = script_runner.run('MGSIM', 'communities', '-h')
     assert ret.success
 
-def test_main(script_runner):
+def test_main(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
-    output_prefix = os.path.join(data_dir, 'comm')
+    output_prefix = os.path.join(str(tmp_path), 'comm')    
     ret = script_runner.run('MGSIM', 'communities',
                             genomeList, output_prefix,
                             '--n-comm', '2', '--rnd-seed', '34847')
     assert ret.success
 
-def test_main_ncomm1(script_runner):
+def test_main_ncomm1(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
-    output_prefix = os.path.join(data_dir, 'comm')
+    output_prefix = os.path.join(str(tmp_path), 'comm')
     ret = script_runner.run('MGSIM', 'communities',
                             genomeList, output_prefix,
                             '--n-comm', '1', '--richness', '1')
     assert ret.success
 
-def test_main_shared(script_runner):
+def test_main_shared(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list_n12.txt')
-    output_prefix = os.path.join(data_dir, 'comm-n12')
+    output_prefix = os.path.join(str(tmp_path), 'comm-n12')
     ret = script_runner.run('MGSIM', 'communities',
                             genomeList, output_prefix,
                             '--n-comm', '2',
@@ -48,20 +48,22 @@ def test_main_shared(script_runner):
                             '--shared-perc', '0.8')
     assert ret.success
     
-def test_main_ncomm_bias1(script_runner):
+def test_main_ncomm_bias1(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list_n12.txt')
-    output_prefix = os.path.join(data_dir, 'comm-n12')
+    output_prefix = os.path.join(str(tmp_path), 'comm-n12')
     ret = script_runner.run('MGSIM', 'communities',
                             genomeList, output_prefix,
-                            '--n-comm', '2', '--richness', '1',
+                            '--n-comm', '2',
+                            '--richness', '1',
                             '--group-bias', '0.5')
     assert ret.success
 
-def test_main_ncomm_bias2(script_runner):
+def test_main_ncomm_bias2(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list_n12.txt')
-    output_prefix = os.path.join(data_dir, 'comm-n12')
+    output_prefix = os.path.join(str(tmp_path), 'comm-n12')
     ret = script_runner.run('MGSIM', 'communities',
                             genomeList, output_prefix,
-                            '--n-comm', '2', '--richness', '1',
+                            '--n-comm', '2',
+                            '--richness', '1',
                             '--group-bias', '-0.7')
     assert ret.success

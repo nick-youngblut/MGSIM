@@ -32,11 +32,11 @@ def test_help(script_runner):
     ret = script_runner.run('MGSIM', 'reads', '-h')
     assert ret.success
 
-def test_main(script_runner):
+def test_main(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(str(tmp_path), 'temp_read_files')
+    output_prefix = os.path.join(str(tmp_path), 'reads_out')
     ret = script_runner.run('MGSIM', 'reads',
                             '--art-paired',
                             '--tmp-dir', temp_dir,
@@ -46,11 +46,11 @@ def test_main(script_runner):
     assert ret.success
     validate_fastq(data_dir)
 
-def test_main_multiProc(script_runner):
+def test_main_multiProc(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(str(tmp_path), 'temp_read_files')
+    output_prefix = os.path.join(str(tmp_path), 'reads_out')
     ret = script_runner.run('MGSIM', 'reads',
                             '-n', '2',
                             '--art-paired',
@@ -61,11 +61,11 @@ def test_main_multiProc(script_runner):
     assert ret.success
     validate_fastq(data_dir)
 
-def test_main_unpaired(script_runner):
+def test_main_unpaired(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(str(tmp_path), 'temp_read_files')
+    output_prefix = os.path.join(str(tmp_path), 'reads_out')
     ret = script_runner.run('MGSIM', 'reads',
                             '--art-mflen', '0',
                             '--tmp-dir', temp_dir,
@@ -75,11 +75,11 @@ def test_main_unpaired(script_runner):
     assert ret.success
     validate_fastq(data_dir, paired=False)
 
-def test_main_low_qual(script_runner):
+def test_main_low_qual(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(str(tmp_path), 'temp_read_files')
+    output_prefix = os.path.join(str(tmp_path), 'reads_out')
     ret = script_runner.run('MGSIM', 'reads',
                             '--art-paired',
                             '--art-maxQ', '25',
@@ -90,13 +90,13 @@ def test_main_low_qual(script_runner):
     assert ret.success
     validate_fastq(data_dir, paired=False)
 
-def test_main_art_error_profiles(script_runner):
+def test_main_art_error_profiles(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
     error_prof1 = os.path.join(data_dir, 'art_profiles/HiSeq2500L150R1.txt')
     error_prof2 = os.path.join(data_dir, 'art_profiles/HiSeq2500L150R2.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(str(tmp_path), 'temp_read_files')
+    output_prefix = os.path.join(str(tmp_path), 'reads_out')
     ret = script_runner.run('MGSIM', 'reads',
                             '--art-paired',
                             '--art-qprof1', error_prof1,                            
@@ -108,11 +108,11 @@ def test_main_art_error_profiles(script_runner):
     assert ret.success
     validate_fastq(data_dir, paired=False)
     
-def test_main_pacbio(script_runner):
+def test_main_pacbio(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(str(tmp_path), 'temp_read_files')
+    output_prefix = os.path.join(str(tmp_path), 'reads_out')
     ret = script_runner.run('MGSIM', 'reads',
                             '-n', '2',
                             '--art-paired',
@@ -125,11 +125,11 @@ def test_main_pacbio(script_runner):
     validate_fastq(data_dir)
     validate_fastq(data_dir, paired=False, seq_type='pacbio')
 
-def test_main_nanopore(script_runner):
+def test_main_nanopore(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
-    temp_dir = os.path.join(data_dir, 'temp_read_files')
-    output_prefix = os.path.join(data_dir, 'TEST')
+    temp_dir = os.path.join(str(tmp_path), 'temp_read_files')
+    output_prefix = os.path.join(str(tmp_path), 'reads_out')
     ret = script_runner.run('MGSIM', 'reads',
                             '-n', '2',
                             '--art-paired',
