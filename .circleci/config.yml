@@ -11,7 +11,7 @@ jobs:
           name: conda env setup
           command: |
             conda install -c conda-forge --yes mamba
-            mamba create -n test_env -c conda-forge -c bioconda python=$PYTHON_VERSION numpy pandas docopt scipy biopython art pyfasta pytest
+            mamba create -n test_env -c conda-forge -c bioconda python=$PYTHON_VERSION numpy pandas docopt configobj scipy biopython art pyfasta pyfastx pytest
       - run:
           name: pytest
           command: |
