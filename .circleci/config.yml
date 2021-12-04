@@ -24,7 +24,9 @@ jobs:
             mamba install -c conda-forge -c bioconda python=$PYTHON_VERSION numpy pandas docopt scipy biopython art pyfasta pytest
       - run:
           name: pytest
-          command: pytest -s
+          command: |
+            conda init bash
+            pytest -s
 workflows:
   sample: # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
