@@ -1,5 +1,6 @@
 [![MGSIM](https://github.com/nick-youngblut/MGSIM/actions/workflows/pythonpackage.yml/badge.svg)](https://github.com/nick-youngblut/MGSIM/actions/workflows/pythonpackage.yml)
 [![Upload Python Package](https://github.com/nick-youngblut/MGSIM/actions/workflows/python-publish.yml/badge.svg)](https://github.com/nick-youngblut/MGSIM/actions/workflows/python-publish.yml)
+[![PyPI version](https://badge.fury.io/py/MGSIM.svg)](https://badge.fury.io/py/MGSIM)
 
 MGSIM
 =====
