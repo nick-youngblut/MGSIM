@@ -1,4 +1,5 @@
-![MGSIM](https://github.com/nick-youngblut/MGSIM/workflows/MGSIM/badge.svg)
+[![MGSIM](https://github.com/nick-youngblut/MGSIM/actions/workflows/pythonpackage.yml/badge.svg)](https://github.com/nick-youngblut/MGSIM/actions/workflows/pythonpackage.yml)
+[![Upload Python Package](https://github.com/nick-youngblut/MGSIM/actions/workflows/python-publish.yml/badge.svg)](https://github.com/nick-youngblut/MGSIM/actions/workflows/python-publish.yml)
 
 MGSIM
 =====
