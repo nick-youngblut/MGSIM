@@ -42,9 +42,10 @@ def test_main(script_runner, tmp_path):
                             '--tmp-dir', temp_dir,
                             '--sr-seq-depth', '1e4',
                             '--rndSeed', '8294',
+                            '--gzip',
                             genomeList, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(output_prefix)
+    validate_fastq(output_prefix, suffix='.fq.gz')
 
 def test_main_multiProc(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
@@ -120,10 +121,11 @@ def test_main_pacbio(script_runner, tmp_path):
                             '--sr-seq-depth', '1000',
                             '--pb-seq-depth', '100',
                             '--rndSeed', '8294',
+                            '--gzip',
                             genomeList, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(output_prefix)
-    validate_fastq(output_prefix, paired=False, seq_type='pacbio')
+    validate_fastq(output_prefix, suffix='.fq.gz')
+    validate_fastq(output_prefix, paired=False, seq_type='pacbio', suffix='.fq.gz')
 
 def test_main_nanopore(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
@@ -137,7 +139,8 @@ def test_main_nanopore(script_runner, tmp_path):
                             '--sr-seq-depth', '1000',
                             '--np-seq-depth', '100',
                             '--rndSeed', '8294',
+                            '--gzip',
                             genomeList, abund_table, output_prefix)
     assert ret.success
-    validate_fastq(output_prefix)
-    validate_fastq(output_prefix, paired=False, seq_type='nanopore', suffix='.fa')
+    validate_fastq(output_prefix, suffix='.fq.gz')
+    validate_fastq(output_prefix, paired=False, seq_type='nanopore', suffix='.fa.gz')

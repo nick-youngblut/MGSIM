@@ -9,8 +9,8 @@ Usage:
   reads --version
 
 Options:
-  <abund_table>       Taxon abundance info.  
   <genome_table>      Taxon genome info.
+  <abund_table>       Taxon abundance info.  
   <output_dir>        Output directory.
   --sr-seq-depth=<d>  Number of (paired) Illumina reads per sample.
                       [Default: 1e5]
@@ -48,6 +48,7 @@ Options:
                       [Default: None]
   -n=<n>              Number of cpus. 
                       [Default: 1]
+  --gzip              gzip output?
   --debug             Debug mode (no subprocesses; verbose output)
   -h --help           Show this screen.
   --version           Show version.
@@ -163,6 +164,7 @@ def main(args):
                               temp_dir=args['--tmp-dir'],
                               nproc=int(float(args['-n'])),
                               rndSeed=rndSeed,
+                              gzip_out=args['--gzip'],
                               debug=args['--debug'])
     ### pacbio
     if float(args['--pb-seq-depth']) > 0:
@@ -173,6 +175,7 @@ def main(args):
                             sl_params=sl_params,
                             temp_dir=args['--tmp-dir'],
                             nproc=int(float(args['-n'])),
+                            gzip_out=args['--gzip'],                             
                             debug=args['--debug'])
     ### nanopore
     if float(args['--np-seq-depth']) > 0:
@@ -183,6 +186,7 @@ def main(args):
                               ns_params=ns_params,
                               temp_dir=args['--tmp-dir'],
                               nproc=int(float(args['-n'])),
+                              gzip_out=args['--gzip'],
                               debug=args['--debug'])
     
 def opt_parse(args=None):

@@ -4,6 +4,7 @@ from __future__ import print_function
 import os
 import sys
 import re
+import gzip
 import time
 import logging
 import random
@@ -114,8 +115,8 @@ def sample_taxon_list(genome_table, abund_table):
         sample_taxon.append(x.tolist())
     return sample_taxon
 
-def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
-                 temp_dir, nproc=1, rndSeed=None, debug=False):
+def sim_illumina(sample_taxon, output_dir, seq_depth, art_params, temp_dir,
+                 nproc=1, rndSeed=None, gzip_out=False, debug=False):
     """
     Simulate illumina reads
     Parameters
@@ -132,6 +133,8 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
         Temporary file directory
     nproc : int
         Number of parallel processes
+    gzip_out : bool
+        gzip output files?
     debug : bool
         Debug mode
     """
@@ -192,6 +195,7 @@ def sim_illumina(sample_taxon, output_dir, seq_depth, art_params,
                    temp_dir=temp_dir,
                    file_prefix='illumina',
                    output_dir=output_dir,
+                   gzip_out=gzip_out,
                    debug=debug)
     if debug is True:
         res = map(func, comms)
@@ -269,7 +273,7 @@ def sim_art(x, art_params, temp_dir, rndSeed=None, debug=False):
         raise ValueError(msg)
    
 def combine_reads_by_sample(sample, fq_files, temp_dir, file_prefix, output_dir,
-                            read_type='fastq', debug=False):
+                            read_type='fastq', gzip_out=False, debug=False):
     """
     Concat all sample-taxon read files into per-sample read files
     Parameters
@@ -282,6 +286,8 @@ def combine_reads_by_sample(sample, fq_files, temp_dir, file_prefix, output_dir,
         Output file prefix
     output_dir : str
         Output directory path
+    debug : bool
+        gzip output?
     debug : bool
         Debug mode
     """
@@ -299,15 +305,28 @@ def combine_reads_by_sample(sample, fq_files, temp_dir, file_prefix, output_dir,
         os.makedirs(output_dir)
     ## read1
     R1_files = _combine_reads(R1_files, output_dir, 'R1',
-                              read_type=read_type)
+                              read_type=read_type, gzip_out=gzip_out)
     ## read2
     if R2_files is not None:
         R2_files = _combine_reads(R2_files, output_dir, 'R2',
-                                  read_type=read_type)
+                                  read_type=read_type, gzip_out=gzip_out)
 
     return [R1_files, R2_files]
-        
-def _combine_reads(read_files, output_dir, output_file, read_type='fastq'):
+
+def _write_reads(outFH, read_files, read_type):
+    for in_file in read_files:
+        taxon = os.path.split(os.path.split(in_file)[0])[1]
+        for i,record in enumerate(SeqIO.parse(in_file, read_type)):
+            # renaming fastq read
+            name =  '{}__SEQ{}'.format(taxon, i)
+            record.id = name
+            record.description = name
+            SeqIO.write(record, outFH, read_type)
+        # delete temporary file
+        os.remove(in_file)
+
+def _combine_reads(read_files, output_dir, output_file, read_type='fastq',
+                   gzip_out=False):
     """
     Combine fastq read files into 1 read file.
     Parameters
@@ -316,8 +335,10 @@ def _combine_reads(read_files, output_dir, output_file, read_type='fastq'):
         All read files to combine
     output_dir : str
         Output directory path
-    output_file : str
-        Output file path
+    read_type : str
+        Read file type
+    gzip_out : bool
+        gzip output?
     """
     if read_type == 'fastq':
         suffix = '.fq'
@@ -325,24 +346,20 @@ def _combine_reads(read_files, output_dir, output_file, read_type='fastq'):
         suffix = '.fa'
     else:
         msg = 'Cannot determine suffix for read type: {}'
-        raise ValueError(msg.format(read_type))    
+        raise ValueError(msg.format(read_type))
     output_file = os.path.join(output_dir, output_file + suffix)
-    with open(output_file, 'w') as outFH:
-        for in_file in read_files:
-            taxon = os.path.split(os.path.split(in_file)[0])[1]
-            for i,record in enumerate(SeqIO.parse(in_file, read_type)):
-                # renaming fastq read
-                name =  '{}__SEQ{}'.format(taxon, i)
-                record.id = name
-                record.description = name
-                SeqIO.write(record, outFH, read_type)
-            # delete temporary file
-            os.remove(in_file)
+    if gzip_out is True:
+        output_file += '.gz'
+        with gzip.open(output_file, 'wt') as outFH:
+            _write_reads(outFH, read_files, read_type)
+    else:
+        with open(output_file, 'w') as outFH:
+            _write_reads(outFH, read_files, read_type)
 
     return output_file
 
-def sim_pacbio(sample_taxon, output_dir, seq_depth, sl_params,
-               temp_dir, nproc=1, rndSeed=None, debug=False):
+def sim_pacbio(sample_taxon, output_dir, seq_depth, sl_params, temp_dir,
+               nproc=1, rndSeed=None, gzip_out=False, debug=False):
     """
     Simulate pacbio reads
     Parameters
@@ -406,6 +423,7 @@ def sim_pacbio(sample_taxon, output_dir, seq_depth, sl_params,
                    temp_dir=temp_dir,
                    file_prefix='pacbio',
                    output_dir=output_dir,
+                   gzip_out=gzip_out,
                    debug=debug)
     if debug is True:
         res = map(func, comms)
@@ -477,7 +495,7 @@ def sim_simlord(x, sl_params, temp_dir, debug=False):
         raise ValueError(msg)
 
 def sim_nanopore(sample_taxon, output_dir, seq_depth, ns_params,
-                 temp_dir, nproc=1, debug=False):
+                 temp_dir, nproc=1, gzip_out=False, debug=False):
     """
     Simulate nanopore reads
     Parameters
@@ -538,6 +556,7 @@ def sim_nanopore(sample_taxon, output_dir, seq_depth, ns_params,
                    file_prefix='nanopore',
                    output_dir=output_dir,
                    read_type='fasta',
+                   gzip_out=gzip_out,
                    debug=debug)
     if debug is True:
         res = map(func, comms)
