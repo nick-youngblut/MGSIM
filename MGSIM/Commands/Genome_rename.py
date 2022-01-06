@@ -43,6 +43,8 @@ Description:
 from docopt import docopt
 import sys,os
 import re
+import gzip
+import bz2
 import logging
 from functools import partial
 import multiprocessing as mp
@@ -51,6 +53,13 @@ from Bio import SeqIO
 ## logging
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
+def _open(infile):
+    if infile.endswith('.bz2'):
+        return bz2.open(infile, 'rt')
+    elif infile.endswith('.gz'):
+        return gzip.open(infile, 'rt')
+    else:
+        return open(infile)
 
 def seq_rename(inFile, ambig_cutoff=0, prefix='.'):
     (inFileDir, inFileName) = os.path.split(inFile)

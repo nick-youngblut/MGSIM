@@ -2,8 +2,6 @@ from __future__ import print_function
 # import
 ## batteries
 import sys, os
-import numpy as np
-import pandas as pd
 try:
     from StringIO import StringIO
 except ModuleNotFoundError:
@@ -11,11 +9,15 @@ except ModuleNotFoundError:
 import random
 import re
 import logging
+import gzip
+import bz2
 from functools import partial
 from itertools import chain,combinations
 from operator import itemgetter
 from collections import OrderedDict,defaultdict
 ## 3rd party
+import numpy as np
+import pandas as pd
 import scipy.stats as stats
 from scipy.spatial import distance
 from configobj import ConfigObj, flatten_errors
@@ -388,6 +390,17 @@ class SimComms(_Comm):
             sum_abunds = sum(w_abunds.values())
             w_abunds = {k : v / sum_abunds * 100.0 for k,v in w_abunds.items()}
             self.comms[comm_id].taxa = pd.Series(w_abunds)
+
+    def _open(self, infile):
+        """
+        Open file, depending on file extension
+        """
+        if infile.endswith('.bz2'):
+            return bz2.open(infile, 'rt')
+        elif infile.endswith('.gz'):
+            return gzip.open(infile, 'rt')
+        else:
+            return open(infile)
             
     def _set_genome_sizes(self):
         """
@@ -395,12 +408,13 @@ class SimComms(_Comm):
         
         Parameters
         ----------
-        """
+        """    
         self.genome_sizes = {}
         for taxon,fasta in self.genome_fasta.items():
             self.genome_sizes[taxon] = 0
-            for record in SeqIO.parse(fasta, "fasta"):
-                self.genome_sizes[taxon] += len(record.seq)        
+            with self._open(fasta) as inF:
+                for record in SeqIO.parse(inF, 'fasta'):
+                    self.genome_sizes[taxon] += len(record.seq)        
 
     def beta_diversity(self, measures=['braycurtis'], outfile=None):
         """
