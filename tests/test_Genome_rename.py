@@ -16,11 +16,18 @@ test_dir = os.path.join(os.path.dirname(__file__))
 data_dir = os.path.join(test_dir, 'data')
 
 
+def chk_suc(ret):
+    # checking cmd return
+    if not ret.success:
+        ret.print()
+    assert ret.success
+
+
 # tests
 def test_help(script_runner):
     ret = script_runner.run('MGSIM', 'genome_rename', '-h')
-    assert ret.success
-
+    chk_suc(ret)
+    
 def test_main(script_runner, tmp_path):
     fasta_files = ['Escherichia_coli_K-12_MG1655.fna',
                    'Clostridium_perfringens_ATCC_13124.fna']
@@ -29,7 +36,7 @@ def test_main(script_runner, tmp_path):
     ret = script_runner.run('MGSIM', 'genome_rename',
                             '--debug', '--prefix', prefix,
                             *fasta_files)
-    assert ret.success
+    chk_suc(ret)
 
 def test_main_ambig(script_runner, tmp_path):
     fasta_files = ['Escherichia_coli_K-12_MG1655_ambig.fna']

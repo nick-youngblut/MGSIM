@@ -27,11 +27,18 @@ def validate_fastq(out_dir, paired=True, seq_type='illumina', suffix='.fq'):
         ret = subprocess.run(['fqtools', 'validate', output_R])
         assert ret.returncode == 0
 
+def chk_suc(ret):
+    # checking cmd return
+    if not ret.success:
+        ret.print()
+    assert ret.success
+    
+        
 # tests
 def test_help(script_runner):
     ret = script_runner.run('MGSIM', 'reads', '-h')
-    assert ret.success
-
+    chk_suc(ret)
+    
 def test_main(script_runner, tmp_path):
     genomeList = os.path.join(data_dir, 'genome_list.txt')
     abund_table = os.path.join(data_dir, 'comm_wAbund.txt')
@@ -44,7 +51,7 @@ def test_main(script_runner, tmp_path):
                             '--rndSeed', '8294',
                             '--gzip',
                             genomeList, abund_table, output_prefix)
-    assert ret.success
+    chk_suc(ret)
     validate_fastq(output_prefix, suffix='.fq.gz')
 
 def test_main_multiProc(script_runner, tmp_path):
@@ -59,7 +66,7 @@ def test_main_multiProc(script_runner, tmp_path):
                             '--sr-seq-depth', '1e4',
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
-    assert ret.success
+    chk_suc(ret)
     validate_fastq(output_prefix)
 
 def test_main_unpaired(script_runner, tmp_path):
@@ -73,7 +80,7 @@ def test_main_unpaired(script_runner, tmp_path):
                             '--sr-seq-depth', '1e4',
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
-    assert ret.success
+    chk_suc(ret)
     validate_fastq(output_prefix, paired=False)
 
 def test_main_low_qual(script_runner, tmp_path):
@@ -88,7 +95,7 @@ def test_main_low_qual(script_runner, tmp_path):
                             '--sr-seq-depth', '1e4',
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
-    assert ret.success
+    chk_suc(ret)
     validate_fastq(output_prefix, paired=False)
 
 def test_main_art_error_profiles(script_runner, tmp_path):
@@ -106,7 +113,7 @@ def test_main_art_error_profiles(script_runner, tmp_path):
                             '--sr-seq-depth', '1e4',
                             '--rndSeed', '8294',
                             genomeList, abund_table, output_prefix)
-    assert ret.success
+    chk_suc(ret)
     validate_fastq(output_prefix, paired=False)
     
 def test_main_pacbio(script_runner, tmp_path):
@@ -123,7 +130,7 @@ def test_main_pacbio(script_runner, tmp_path):
                             '--rndSeed', '8294',
                             '--gzip',
                             genomeList, abund_table, output_prefix)
-    assert ret.success
+    chk_suc(ret)
     validate_fastq(output_prefix, suffix='.fq.gz')
     validate_fastq(output_prefix, paired=False, seq_type='pacbio', suffix='.fq.gz')
 
@@ -141,6 +148,6 @@ def test_main_nanopore(script_runner, tmp_path):
                             '--rndSeed', '8294',
                             '--gzip',
                             genomeList, abund_table, output_prefix)
-    assert ret.success
+    chk_suc(ret)
     validate_fastq(output_prefix, suffix='.fq.gz')
     validate_fastq(output_prefix, paired=False, seq_type='nanopore', suffix='.fa.gz')
