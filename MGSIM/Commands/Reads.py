@@ -13,7 +13,7 @@ Options:
   <abund_table>       Taxon abundance info.  
   <output_dir>        Output directory.
   --sr-seq-depth=<d>  Number of (paired) Illumina reads per sample.
-                      [Default: 1e5]
+                      [Default: 0]
   --art-paired        art_iilumina --paired parameter.
   --art-len=<al>      art_illumina --len parameter.
                       [Default: 150] 

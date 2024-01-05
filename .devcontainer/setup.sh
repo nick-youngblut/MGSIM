@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # create conda environment
-micromamba create -y -f environment.yml
+micromamba env create -y -f environment.yml

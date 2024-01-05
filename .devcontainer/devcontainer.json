@@ -1,6 +1,8 @@
 {
     "name": "MGSIM",
-    "image": "ubuntu:22.04",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
     "postCreateCommand": "bash .devcontainer/setup.sh",
     "extensions": [
         "github.copilot",

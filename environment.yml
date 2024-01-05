@@ -1,3 +1,4 @@
+name: mgsim
 channels:
   - conda-forge
   - bioconda
@@ -6,10 +7,10 @@ dependencies:
   - numpy>=1.10
   - pandas>=0.18
   - scipy>=0.17
-  - configobj>=5.0.6
-  - biopython>=1.68
-  - art
-  - pyfastx
-  - fqtools
-  - simlord
-  - nanosim-h
+  - configobj=5.0.8
+  - biopython=1.82
+  - art=2016.06.05
+  - pyfastx=2.0.2
+  - fqtools=2.0
+  - simlord=1.0.4
+  - nanosim-h=1.1.0.4
