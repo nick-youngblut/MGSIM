@@ -131,6 +131,8 @@ MGSIM genome_download -d tutorial/ -n 3 tutorial/taxon_accession.tsv > tutorial/
 
 ## Simulate communities
 
+Simulate 2 communities
+
 ```bash
 MGSIM communities --n-comm 2 tutorial/genomes.tsv tutorial/communities
 ```
@@ -146,13 +148,13 @@ MGSIM reads tutorial/genomes.tsv --sr-seq-depth 1e5 tutorial/communities_abund.t
 PacBio reads
 
 ```bash
-MGSIM reads tutorial/genomes.tsv --sr-seq-depth 0 --pb-seq-depth 1e3 tutorial/communities_abund.txt tutorial/pacbio_reads/
+MGSIM reads tutorial/genomes.tsv --pb-seq-depth 1e3 tutorial/communities_abund.txt tutorial/pacbio_reads/
 ```
 
 Nanopore reads
 
 ```bash
-MGSIM reads tutorial/genomes.tsv --sr-seq-depth 0 --np-seq-depth 1e3 tutorial/communities_abund.txt tutorial/nanopore_reads/
+MGSIM reads tutorial/genomes.tsv --np-seq-depth 1e3 tutorial/communities_abund.txt tutorial/nanopore_reads/
 ```
 
 
