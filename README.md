@@ -46,7 +46,15 @@ The workflow:
 
 ## Dependencies
 
-See the `conda install` line in the [CI yaml](.github/workflows/pythonpackage.yml)
+See `environment.yml` for a list of dependencies.
+
+You can install via:
+
+```bash
+mamba env create -f environment.yml -n mgsim
+```
+
+> mamba is much faster than conda
 
 ## Install
 
@@ -97,6 +105,55 @@ See all subcommands:
 ### Simulating haplotagging reads (aka read-cloud data)
 
 `MGSIM ht_reads -h`
+
+# Tutorial
+
+## Reference genome download
+
+Create Taxon-accession table
+
+```bash
+mkdir -p tutorial
+
+cat <<-EOF > tutorial/taxon_accession.tsv
+Taxon	Accession
+Escherichia coli O104-H4	NC_018658.1
+Clostridium perfringens ATCC.13124	NC_008261
+Methanosarcina barkeri [MS]	NZ_CP009528.1
+EOF
+```
+
+Download genomes
+
+```bash
+MGSIM genome_download -d tutorial/ -n 3 tutorial/taxon_accession.tsv > tutorial/genomes.tsv
+```
+
+## Simulate communities
+
+```bash
+MGSIM communities --n-comm 2 tutorial/genomes.tsv tutorial/communities
+```
+
+## Simulate reads
+
+Illumina reads
+
+```bash
+MGSIM reads tutorial/genomes.tsv --sr-seq-depth 1e5 tutorial/communities_abund.txt tutorial/illumina_reads/
+```
+
+PacBio reads
+
+```bash
+MGSIM reads tutorial/genomes.tsv --sr-seq-depth 0 --pb-seq-depth 1e3 tutorial/communities_abund.txt tutorial/pacbio_reads/
+```
+
+Nanopore reads
+
+```bash
+MGSIM reads tutorial/genomes.tsv --sr-seq-depth 0 --np-seq-depth 1e3 tutorial/communities_abund.txt tutorial/nanopore_reads/
+```
 
 
 # LICENSE

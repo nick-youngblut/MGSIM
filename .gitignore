@@ -4,6 +4,7 @@ screenlog.*
 *.pyc
 *.o
 *.so
+tutorial/
 dev/
 t/
 figures/

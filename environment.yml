@@ -1,4 +1,3 @@
-name: mgsim
 channels:
   - conda-forge
   - bioconda
