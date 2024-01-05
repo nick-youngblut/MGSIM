@@ -9,7 +9,7 @@ import numpy
 desc = 'Metagenome simulation of multiple synthetic communities'
 setup(
     name = 'MGSIM',
-    version = '0.2.6',
+    version = '0.2.7',
     description = desc,
     long_description = desc + '\n See README for more information.',
     author = 'Nick Youngblut',

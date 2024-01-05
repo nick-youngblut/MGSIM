@@ -126,7 +126,7 @@ EOF
 Download genomes
 
 ```bash
-MGSIM genome_download -d tutorial/ -n 3 tutorial/taxon_accession.tsv > tutorial/genomes.tsv
+MGSIM genome_download -d tutorial/ tutorial/taxon_accession.tsv > tutorial/genomes.tsv
 ```
 
 ## Simulate communities
