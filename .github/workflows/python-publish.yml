@@ -13,8 +13,6 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
-    - name: Install dependencies
-      run: python -m pip install build numpy --user
     - name: Build package
       run: python -m build
     - name: Publish package
