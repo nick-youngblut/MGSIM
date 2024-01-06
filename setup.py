@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
-import os
-import glob
-import numpy
-
 
 ## install main application
 desc = 'Metagenome simulation of multiple synthetic communities'
@@ -19,7 +15,6 @@ setup(
             'MGSIM = MGSIM.__main__:main'
         ]
     },
-    include_dirs = [numpy.get_include()],
     license = "MIT license",
     packages = find_packages(),
     package_dir={'MGSIM':
